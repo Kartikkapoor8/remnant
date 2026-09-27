@@ -87,17 +87,29 @@ fi
 
 # ---------- audio ----------
 dur() { "$FFPROBE" -v error -show_entries format=duration -of csv=p=0 "$1"; }
-pick() { [ -s "$RAW/$1f.mp3" ] && echo "$RAW/$1f.mp3" || echo "$RAW/$1.mp3"; }
+pick() { if [ -s "$RAW/$1v3.mp3" ]; then echo "$RAW/$1v3.mp3"; elif [ -s "$RAW/$1f.mp3" ]; then echo "$RAW/$1f.mp3"; else echo "$RAW/$1.mp3"; fi; }
+# fitvo id file max -> writes $AUD/fit_$id.wav, time-compressed only if the read is longer than its slot
+fitvo() {
+  local d; d=$(dur "$2"); local r; r=$(awk -v d="$d" -v m="$3" 'BEGIN{r=d/m*1.01; if(r<1)r=1; if(r>1.25)r=1.25; printf "%.3f", r}')
+  "$FFMPEG" -v error -y -i "$2" -af "atempo=$r" -ar 48000 "$AUD/fit_$1.wav"
+  echo "$1: $(basename "$2") $d s, max $3 s, atempo $r -> $(dur "$AUD/fit_$1.wav") s" | tee -a "$AUD/times.txt"
+}
+# pickme id -> the user's own extracted line if present, else the ElevenLabs scratch line
+pickme() { [ -s "$AUD/me_own_$1.wav" ] && echo "$AUD/me_own_$1.wav" || echo "$RAW/$1.mp3"; }
 ms() { awk -v t="$1" 'BEGIN{printf "%d", t*1000}'; }
 
 if [ "$STEP" = audio ] || [ "$STEP" = all ]; then
-  VO4=$(pick vo4); VO5=$(pick vo5); VO6=$(pick vo6); VO7=$(pick vo7)
+  : > "$AUD/times.txt"
+  # VO in-times (s) and slot maxima. Explainer starts at 75.0: architecture 81, guardrails 95, serif 101, wordmark 105.
+  T_VO1=3.0; T_VO2=25.2; T_VO3=38.0; T_VO4=72.0; T_VO7=105.5
+  fitvo vo1 "$(pick vo1)" 7.0; fitvo vo2 "$(pick vo2)" 3.8; fitvo vo3 "$(pick vo3)" 5.0; fitvo vo4 "$(pick vo4)" 9.0
+  fitvo vo5 "$(pick vo5)" 14.0; fitvo vo6 "$(pick vo6)" 6.0; fitvo vo7 "$(pick vo7)" 7.5
+  VO1=$AUD/fit_vo1.wav; VO2=$AUD/fit_vo2.wav; VO3=$AUD/fit_vo3.wav; VO4=$AUD/fit_vo4.wav; VO5=$AUD/fit_vo5.wav; VO6=$AUD/fit_vo6.wav; VO7=$AUD/fit_vo7.wav
   D4=$(dur "$VO4"); D5=$(dur "$VO5"); D6=$(dur "$VO6"); D7=$(dur "$VO7")
-  # VO in-times (s). Explainer starts at 75.0: architecture 81, guardrails 95, serif 101, wordmark 105.
-  T_VO1=3.0; T_VO2=25.2; T_VO3=38.0; T_VO4=74.0
-  T_VO5=$(awk -v a="$T_VO4" -v d="$D4" 'BEGIN{t=a+d+0.3; if(t<80.6)t=80.6; printf "%.2f", t}')
+  T_VO5=$(awk -v a="$T_VO4" -v d="$D4" 'BEGIN{t=a+d+0.3; if(t<81.0)t=81.0; printf "%.2f", t}')
   T_VO6=$(awk -v a="$T_VO5" -v d="$D5" 'BEGIN{t=a+d+0.2; if(t<95.0)t=95.0; printf "%.2f", t}')
-  T_VO7=105.5
+  ME1=$(pickme me1); ME2=$(pickme me2); ME3=$(pickme me3)
+  echo "me lines: $ME1 | $ME2 | $ME3" | tee -a "$AUD/times.txt"
   # call lines (s)
   T_ME1=43.0; T_S1=46.0; T_ME2=48.1; T_S2=50.7; T_S3=52.9; T_ME3=56.3; T_S4=57.2; T_S5=60.6; T_S6=66.5
   echo "VO times: 1=$T_VO1 2=$T_VO2 3=$T_VO3 4=$T_VO4 5=$T_VO5 6=$T_VO6 7=$T_VO7 (d4=$D4 d5=$D5 d6=$D6 d7=$D7)" | tee "$AUD/times.txt"
@@ -112,9 +124,9 @@ if [ "$STEP" = audio ] || [ "$STEP" = all ]; then
   }
   # inputs
   I=( "$RAW/s1.mp3" "$RAW/s2.mp3" "$RAW/s3.mp3" "$RAW/s4.mp3" "$RAW/s5.mp3" "$RAW/s6.mp3" \
-      "$RAW/me1.mp3" "$RAW/me2.mp3" "$RAW/me3.mp3" \
+      "$ME1" "$ME2" "$ME3" \
       "$RAW/sfx_rain.mp3" "$RAW/sfx_horn.mp3" "$RAW/sfx_thud.mp3" "$RAW/sfx_room.mp3" "$RAW/sfx_hiss.mp3" \
-      "$RAW/vo1.mp3" "$RAW/vo2.mp3" "$RAW/vo3.mp3" "$VO4" "$VO5" "$VO6" "$VO7" )
+      "$VO1" "$VO2" "$VO3" "$VO4" "$VO5" "$VO6" "$VO7" )
   ARGS=()
   for i in "${!I[@]}"; do
     case $i in 12) ARGS+=( -stream_loop 3 -i "${I[$i]}" );; 13) ARGS+=( -stream_loop 1 -i "${I[$i]}" );; *) ARGS+=( -i "${I[$i]}" );; esac
@@ -156,13 +168,18 @@ $(plain 20 $T_VO7 0dB)[v7];
 fi
 
 if [ "$STEP" = mux ] || [ "$STEP" = all ]; then
-  # one delivery encode of the picture (high bitrate but capped), then mux twice with stream copy
-  "$FFMPEG" -v error -y -i "$OUT/video_only.mp4" -c:v libx264 -preset medium -crf 17 -maxrate 18M -bufsize 36M -pix_fmt yuv420p -g 48 -colorspace bt709 -color_primaries bt709 -color_trc bt709 -an "$OUT/video_delivery.mp4"
-  for k in scratch novo; do
-    "$FFMPEG" -v error -y -i "$OUT/video_delivery.mp4" -i "$AUD/mix_${k}.wav" -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k -ar 48000 -movflags +faststart -shortest "$OUT/remnant_${k}.mp4"
-    echo "== remnant_${k}.mp4"; "$FFPROBE" -v error -show_entries format=duration:stream=codec_name,width,height,r_frame_rate,sample_rate,channels -of compact=p=0:nk=0 "$OUT/remnant_${k}.mp4"
-    "$FFMPEG" -hide_banner -i "$OUT/remnant_${k}.mp4" -af ebur128=peak=true -f null - 2>&1 | grep -E '^\s+(I:|Peak:)' | tail -2
+  # one delivery encode of the picture (high bitrate but capped), then mux with stream copy
+  if [ ! -s "$OUT/video_only.mp4" ]; then "$FFMPEG" -v error -y -f concat -safe 0 -i "$SEG/list.txt" -c copy "$OUT/video_only.mp4"; fi
+  if [ ! -s "$OUT/video_delivery.mp4" ]; then
+    "$FFMPEG" -v error -y -i "$OUT/video_only.mp4" -c:v libx264 -preset medium -crf 17 -maxrate 18M -bufsize 36M -pix_fmt yuv420p -g 48 -colorspace bt709 -color_primaries bt709 -color_trc bt709 -an "$OUT/video_delivery.mp4"
+  fi
+  # final = picture + scratch mix (VO included); novo = picture + bed only
+  for pair in "final:scratch" "novo:novo"; do
+    name=${pair%%:*}; k=${pair##*:}
+    "$FFMPEG" -v error -y -i "$OUT/video_delivery.mp4" -i "$AUD/mix_${k}.wav" -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k -ar 48000 -movflags +faststart -shortest "$OUT/remnant_${name}.mp4"
+    echo "== remnant_${name}.mp4"; "$FFPROBE" -v error -show_entries format=duration:stream=codec_name,width,height,r_frame_rate,sample_rate,channels -of compact=p=0:nk=0 "$OUT/remnant_${name}.mp4"
+    "$FFMPEG" -hide_banner -i "$OUT/remnant_${name}.mp4" -af ebur128=peak=true -f null - 2>&1 | grep -E '^\s+(I:|Peak:)' | tail -2
   done
-  for t in 4 12 24 50 80 100; do "$FFMPEG" -v error -y -ss $t -i "$OUT/remnant_scratch.mp4" -frames:v 1 "$OUT/frames/f_$(printf %03d $t).png"; done
+  for t in 4 12 24 50 80 100; do "$FFMPEG" -v error -y -ss $t -i "$OUT/remnant_final.mp4" -frames:v 1 "$OUT/frames/f_$(printf %03d $t).png"; done
   ls "$OUT/frames"
 fi
