@@ -1,0 +1,76 @@
+{
+  "sampleSize": 129,
+  "length": {
+    "charsP50": 22,
+    "charsP75": 38,
+    "charsP90": 57,
+    "charsMax": 101,
+    "wordsP50": 4,
+    "wordsP90": 12
+  },
+  "punctuation": {
+    "terminalPeriodRate": 0,
+    "exclamationRate": 0.03875968992248062,
+    "questionRate": 0.023255813953488372,
+    "ellipsisRate": 0,
+    "commaRate": 0.13953488372093023,
+    "apostropheDropRate": 1
+  },
+  "capitalization": {
+    "lowercaseStartRate": 0.9763779527559056,
+    "allLowercaseRate": 0.9606299212598425,
+    "lowercaseIRate": 0.9333333333333333
+  },
+  "emoji": {
+    "perMessage": 0.046511627906976744,
+    "top": [
+      "❤️",
+      "🌻"
+    ]
+  },
+  "bursts": {
+    "meanSize": 1.9846153846153847,
+    "sizeDistribution": [
+      0,
+      0.3076923076923077,
+      0.4,
+      0.2923076923076923
+    ],
+    "medianGapMs": 0,
+    "charsPerSecond": 2
+  },
+  "lexicon": {
+    "laugh": "haha",
+    "affirmative": "ya",
+    "signaturePhrases": [
+      "hi",
+      "bub",
+      "hi hi",
+      "gonna",
+      "ur",
+      "shes",
+      "dont",
+      "late",
+      "haha",
+      "frog",
+      "ill",
+      "shift"
+    ],
+    "petNames": [
+      "bub",
+      "love"
+    ],
+    "stretchRate": 0.031007751937984496,
+    "abbreviations": [
+      "u",
+      "ur",
+      "omw",
+      "ya",
+      "okok"
+    ]
+  },
+  "greetings": [
+    "hi hi",
+    "leaving for dani"
+  ]
+}

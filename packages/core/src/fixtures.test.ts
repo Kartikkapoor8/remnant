@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { loadSarahFixture } from "./fixtures.ts";
+import { join } from "node:path";
+import { loadSarahFixture, SARAH_FIXTURE_DIR } from "./fixtures.ts";
+import { computeFingerprint } from "./stylometry/fingerprint.ts";
 
 describe("Sarah fixture", () => {
   test("loads a realistic corpus with the canonical last message", async () => {
@@ -32,5 +34,11 @@ describe("Sarah fixture", () => {
     const me = result.messages.length - them;
     expect(them).toBeGreaterThan(me);
     expect(me).toBeGreaterThan(50);
+  });
+
+  test("fingerprint.json is exactly what `bun run sarah` measures from the corpus", async () => {
+    const { result } = await loadSarahFixture();
+    const stored = await Bun.file(join(SARAH_FIXTURE_DIR, "fingerprint.json")).json();
+    expect(stored).toEqual(JSON.parse(JSON.stringify(computeFingerprint(result.messages))));
   });
 });
