@@ -74,3 +74,23 @@ const STOPWORDS = new Set([
 export function significantTokens(query: string): string[] {
   return tokenizeQuery(query).filter((t) => !STOPWORDS.has(t));
 }
+
+/**
+ * Rank memory hits by keyword overlap with the query (shared by both stores).
+ * Hits with zero overlap keep their original order after the scored ones.
+ */
+export function rankByOverlap(hits: MemoryHit[], query: string): MemoryHit[] {
+  const tokens = significantTokens(query);
+  const phrase = query.toLowerCase().trim();
+  const scored = hits.map((h, i) => {
+    const hay = h.text.toLowerCase();
+    let overlap = 0;
+    for (const t of tokens) if (hay.includes(t)) overlap += 1;
+    let score = tokens.length ? overlap / Math.sqrt(tokens.length) : 0;
+    if (phrase.length > 3 && hay.includes(phrase)) score += 0.5;
+    if (h.kind === "page") score += 0.15 * (h.score ?? 0);
+    return { h: { ...h, score }, i };
+  });
+  scored.sort((a, b) => b.h.score! - a.h.score! || a.i - b.i);
+  return scored.map((s) => s.h);
+}
