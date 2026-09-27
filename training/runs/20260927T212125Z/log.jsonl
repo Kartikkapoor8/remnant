@@ -1,0 +1,42 @@
+{"event": "session", "session_id": "d6dedea2-347f-40ae-b161-b15fcc6f0db0", "base_model": "Qwen/Qwen3.8-27B-FP8", "at": "2026-09-27T21:21:27.145560+00:00"}
+{"event": "model", "model_id": "d6dedea2-347f-40ae-b161-b15fcc6f0db0:model:1", "at": "2026-09-27T21:21:37.441525+00:00"}
+{"event": "step", "step": 1, "epoch": 0, "loss_mean": 4.192591190338135, "grad_norm": 95.14036670536358, "examples": 8, "secs": 20.61, "at": "2026-09-27T21:21:58.054760+00:00"}
+{"event": "step", "step": 2, "epoch": 0, "loss_mean": 2.8793649673461914, "grad_norm": 45.31480737340274, "examples": 8, "secs": 5.23, "at": "2026-09-27T21:22:03.283358+00:00"}
+{"event": "step", "step": 3, "epoch": 0, "loss_mean": 2.603076934814453, "grad_norm": 39.31004220666345, "examples": 8, "secs": 4.9, "at": "2026-09-27T21:22:08.182691+00:00"}
+{"event": "step", "step": 4, "epoch": 0, "loss_mean": 2.4294066429138184, "grad_norm": 36.03535339570327, "examples": 8, "secs": 4.83, "at": "2026-09-27T21:22:13.012802+00:00"}
+{"event": "step", "step": 5, "epoch": 0, "loss_mean": 2.2146999835968018, "grad_norm": 20.898744753513018, "examples": 8, "secs": 5.09, "at": "2026-09-27T21:22:18.098498+00:00"}
+{"event": "step", "step": 6, "epoch": 0, "loss_mean": 1.472243070602417, "grad_norm": 23.88030392356566, "examples": 8, "secs": 10.7, "at": "2026-09-27T21:22:28.800406+00:00"}
+{"event": "step", "step": 7, "epoch": 0, "loss_mean": 2.6378636360168457, "grad_norm": 23.03035578971606, "examples": 8, "secs": 5.0, "at": "2026-09-27T21:22:33.804148+00:00"}
+{"event": "step", "step": 8, "epoch": 0, "loss_mean": 1.6117117404937744, "grad_norm": 15.427108491168307, "examples": 8, "secs": 5.43, "at": "2026-09-27T21:22:39.231037+00:00"}
+{"event": "step", "step": 9, "epoch": 0, "loss_mean": 2.403329849243164, "grad_norm": 21.293624285067075, "examples": 8, "secs": 5.24, "at": "2026-09-27T21:22:44.471602+00:00"}
+{"event": "step", "step": 10, "epoch": 0, "loss_mean": 2.6577930450439453, "grad_norm": 19.602313051263952, "examples": 8, "secs": 5.53, "at": "2026-09-27T21:22:49.998829+00:00"}
+{"event": "step", "step": 11, "epoch": 0, "loss_mean": 1.8555700778961182, "grad_norm": 33.106873176289696, "examples": 8, "secs": 10.47, "at": "2026-09-27T21:23:00.467271+00:00"}
+{"event": "step", "step": 12, "epoch": 0, "loss_mean": 2.2167877322069076, "grad_norm": 18.801975733917168, "examples": 7, "secs": 5.08, "at": "2026-09-27T21:23:05.551599+00:00"}
+{"event": "step", "step": 13, "epoch": 1, "loss_mean": 1.316893219947815, "grad_norm": 15.72680670813443, "examples": 8, "secs": 4.85, "at": "2026-09-27T21:23:10.405880+00:00"}
+{"event": "step", "step": 14, "epoch": 1, "loss_mean": 1.6533856391906738, "grad_norm": 14.988401708747674, "examples": 8, "secs": 4.56, "at": "2026-09-27T21:23:14.967509+00:00"}
+{"event": "step", "step": 15, "epoch": 1, "loss_mean": 1.6053831577301025, "grad_norm": 16.397980894008114, "examples": 8, "secs": 5.0, "at": "2026-09-27T21:23:19.971141+00:00"}
+{"event": "step", "step": 16, "epoch": 1, "loss_mean": 1.5337902307510376, "grad_norm": 21.41843759572169, "examples": 8, "secs": 10.53, "at": "2026-09-27T21:23:30.499573+00:00"}
+{"event": "step", "step": 17, "epoch": 1, "loss_mean": 1.4999847412109375, "grad_norm": 23.002912074053764, "examples": 8, "secs": 4.31, "at": "2026-09-27T21:23:34.806644+00:00"}
+{"event": "step", "step": 18, "epoch": 1, "loss_mean": 1.524895429611206, "grad_norm": 23.07471245999051, "examples": 8, "secs": 6.46, "at": "2026-09-27T21:23:41.271336+00:00"}
+{"event": "step", "step": 19, "epoch": 1, "loss_mean": 1.391545057296753, "grad_norm": 19.05164737660609, "examples": 8, "secs": 4.26, "at": "2026-09-27T21:23:45.529720+00:00"}
+{"event": "step", "step": 20, "epoch": 1, "loss_mean": 1.028459072113037, "grad_norm": 23.60741310311984, "examples": 8, "secs": 5.06, "at": "2026-09-27T21:23:50.589372+00:00"}
+{"event": "step", "step": 21, "epoch": 1, "loss_mean": 1.1844736337661743, "grad_norm": 19.045061656872004, "examples": 8, "secs": 8.87, "at": "2026-09-27T21:23:59.455061+00:00"}
+{"event": "step", "step": 22, "epoch": 1, "loss_mean": 1.3633079528808594, "grad_norm": 21.09231823583189, "examples": 8, "secs": 4.75, "at": "2026-09-27T21:24:04.209137+00:00"}
+{"event": "step", "step": 23, "epoch": 1, "loss_mean": 0.9491024017333984, "grad_norm": 27.584494508184267, "examples": 8, "secs": 20.05, "at": "2026-09-27T21:24:24.255075+00:00"}
+{"event": "step", "step": 24, "epoch": 1, "loss_mean": 0.7743706703186035, "grad_norm": 15.963803934387471, "examples": 7, "secs": 4.16, "at": "2026-09-27T21:24:28.417943+00:00"}
+{"event": "step", "step": 25, "epoch": 2, "loss_mean": 0.802046537399292, "grad_norm": 18.35782349503607, "examples": 8, "secs": 3.95, "at": "2026-09-27T21:24:32.373662+00:00"}
+{"event": "step", "step": 26, "epoch": 2, "loss_mean": 0.5924966931343079, "grad_norm": 18.158102948094115, "examples": 8, "secs": 11.8, "at": "2026-09-27T21:24:44.174944+00:00"}
+{"event": "step", "step": 27, "epoch": 2, "loss_mean": 0.9211788726555629, "grad_norm": 23.805219594869627, "examples": 8, "secs": 4.56, "at": "2026-09-27T21:24:48.732147+00:00"}
+{"event": "step", "step": 28, "epoch": 2, "loss_mean": 0.4789828658103943, "grad_norm": 19.05134910775909, "examples": 8, "secs": 3.91, "at": "2026-09-27T21:24:52.638585+00:00"}
+{"event": "step", "step": 29, "epoch": 2, "loss_mean": 0.5685269832611084, "grad_norm": 23.955085259711364, "examples": 8, "secs": 3.96, "at": "2026-09-27T21:24:56.595428+00:00"}
+{"event": "step", "step": 30, "epoch": 2, "loss_mean": 0.9866819993636609, "grad_norm": 30.922524221311956, "examples": 8, "secs": 4.04, "at": "2026-09-27T21:25:00.637647+00:00"}
+{"event": "step", "step": 31, "epoch": 2, "loss_mean": 0.8743950128555298, "grad_norm": 28.340687154198985, "examples": 8, "secs": 12.06, "at": "2026-09-27T21:25:12.699547+00:00"}
+{"event": "step", "step": 32, "epoch": 2, "loss_mean": 0.5114034414291382, "grad_norm": 53.82446436857468, "examples": 8, "secs": 4.17, "at": "2026-09-27T21:25:16.867673+00:00"}
+{"event": "step", "step": 33, "epoch": 2, "loss_mean": 0.6066595911979675, "grad_norm": 29.174725592789315, "examples": 8, "secs": 4.1, "at": "2026-09-27T21:25:20.969090+00:00"}
+{"event": "step", "step": 34, "epoch": 2, "loss_mean": 0.4911545217037201, "grad_norm": 20.74904171633197, "examples": 8, "secs": 4.08, "at": "2026-09-27T21:25:25.046059+00:00"}
+{"event": "step", "step": 35, "epoch": 2, "loss_mean": 0.28018468618392944, "grad_norm": 20.636936207177428, "examples": 8, "secs": 4.82, "at": "2026-09-27T21:25:29.864012+00:00"}
+{"event": "step", "step": 36, "epoch": 2, "loss_mean": 0.7534187861851284, "grad_norm": 32.51363986310439, "examples": 7, "secs": 10.5, "at": "2026-09-27T21:25:40.365653+00:00"}
+{"event": "checkpoint", "path": "river://1e36c155-9c45-4031-a2de-8dd8281c8971/sampler_weights/sarah-lora", "step": 36, "at": "2026-09-27T21:25:48.217029+00:00"}
+{"event": "sample", "user": "Why would I be mad about sunflowers.", "real": "bc they were 14 dollars", "adapter": "ok", "at": "2026-09-27T21:25:53.311361+00:00"}
+{"event": "sample", "user": "Are you sure that's a good idea.", "real": "no\nhaha", "adapter": "haha", "at": "2026-09-27T21:25:58.734126+00:00"}
+{"event": "sample", "user": "Okay. Drive safe. Love you.", "real": "love u", "adapter": "love u", "at": "2026-09-27T21:26:04.986344+00:00"}
