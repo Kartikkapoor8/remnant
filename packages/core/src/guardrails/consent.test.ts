@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { PersonaProfile } from "../types.ts";
 import { InMemoryConsentStore, JsonFileConsentStore, checkConsent, createAttestation } from "./consent.ts";
@@ -64,7 +65,7 @@ describe("createAttestation", () => {
 
 describe("JsonFileConsentStore", () => {
   test("round trips through a file it creates", async () => {
-    const dir = mkdtempSync("/private/tmp/claude-501/-Users-kartik/33344b0d-136d-46de-8aee-a218fbc3dbdf/scratchpad/consent-");
+    const dir = mkdtempSync(join(tmpdir(), "remnant-consent-"));
     const path = join(dir, "consent.json");
     const store = new JsonFileConsentStore(path);
     expect(await store.list("sarah")).toEqual([]);

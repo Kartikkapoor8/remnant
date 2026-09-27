@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { ElevenLabsVoice, JsonVoiceStore, STOCK_VOICE_ID } from "./index.ts";
 
 function fakeFetch(handler: (url: string, init?: RequestInit) => Response): typeof fetch {
@@ -42,7 +45,7 @@ describe("ElevenLabsVoice", () => {
 
 describe("JsonVoiceStore", () => {
   test("round-trips a record per persona", async () => {
-    const path = `/private/tmp/claude-501/-Users-kartik/33344b0d-136d-46de-8aee-a218fbc3dbdf/scratchpad/voice-${Date.now()}.json`;
+    const path = join(mkdtempSync(join(tmpdir(), "remnant-voice-")), "voice.json");
     const store = new JsonVoiceStore(path);
     expect(await store.get("sarah")).toBeNull();
     await store.set({ personaSlug: "sarah", voiceId: "v1", clonedAt: "2026-09-27T00:00:00Z", consentId: "c1" });
