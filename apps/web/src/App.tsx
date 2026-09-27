@@ -23,7 +23,7 @@ export function App() {
     return (
       <div className="app">
         <ConsentGate state={state} onDone={convo.refresh} />
-        <Footer state={state} />
+        <Footer state={state} health={convo.health} />
       </div>
     );
   }
@@ -36,7 +36,7 @@ export function App() {
       <Thread convo={convo} />
       {convo.error && <div className="card card--danger">{convo.error}</div>}
       <Composer disabled={!state || convo.typing} personaName={state?.persona.name ?? ""} onSend={convo.send} />
-      <Footer state={state} />
+      <Footer state={state} health={convo.health} />
       <AnimatePresence>
         {calling && state && (
           <CallScreen key="call" state={state} send={convo.send} lastReply={convo.lastReply} onEnd={() => setCalling(false)} demoSlug={convo.demo ? demoSlugFromLocation() : null} />

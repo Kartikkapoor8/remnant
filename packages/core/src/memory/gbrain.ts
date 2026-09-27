@@ -1,5 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { MemoryHit } from "../types.ts";
 import {
   rankByOverlap,
@@ -15,6 +17,10 @@ export interface GBrainOptions {
   home?: string;
   /** Path to the gbrain executable. Defaults to "gbrain" on PATH. */
   command?: string;
+  /** Hosted brain: URL of a gbrain HTTP MCP server (`gbrain serve --http` or `gbrain mcp expose`). When set, nothing is spawned. */
+  url?: string;
+  /** Bearer token for `url` (from `gbrain mcp grant`). */
+  token?: string;
   /** Per-call timeout in ms. */
   timeoutMs?: number;
   /** Receives child stderr lines for diagnostics. */
@@ -74,20 +80,23 @@ export class GBrainUnavailableError extends Error {
  * MemoryStore backed by a real GBrain brain over MCP stdio.
  *
  * Spawns `gbrain serve --surface verbs` and speaks JSON-RPC to it with the
- * official MCP client. The 7 memory verbs are the only tools on that surface:
+ * official MCP client over stdio, or, with `url`, talks Streamable HTTP to a
+ * hosted brain. The 7 memory verbs are the only tools on that surface:
  * recall, remember, entity, synthesize, forget, context_pack, delta. We use
  * four of them at runtime; `synthesize` is deliberately not used (it costs an
  * LLM call inside gbrain and the persona prompt already does the reasoning).
  */
 export class GBrainMemoryStore implements MemoryStore {
   readonly kind = "gbrain" as const;
+  readonly backend: "gbrain-stdio" | "gbrain-http";
   private client: Client | null = null;
-  private transport: StdioClientTransport | null = null;
+  private transport: Transport | null = null;
   private stderrTail: string[] = [];
   private readonly opts: Required<Pick<GBrainOptions, "command" | "timeoutMs">> & GBrainOptions;
 
   constructor(opts: GBrainOptions = {}) {
     this.opts = { command: "gbrain", timeoutMs: 20_000, ...opts };
+    this.backend = opts.url ? "gbrain-http" : "gbrain-stdio";
   }
 
   static envFor(home?: string): Record<string, string> {
@@ -97,28 +106,38 @@ export class GBrainMemoryStore implements MemoryStore {
     return env;
   }
 
-  async connect(): Promise<void> {
-    if (this.client) return;
-    const transport = new StdioClientTransport({
+  private makeTransport(): Transport {
+    if (this.opts.url) {
+      const headers: Record<string, string> = this.opts.token ? { authorization: `Bearer ${this.opts.token}` } : {};
+      return new StreamableHTTPClientTransport(new URL(this.opts.url), { requestInit: { headers } });
+    }
+    return new StdioClientTransport({
       command: this.opts.command,
       args: ["serve", "--surface", "verbs"],
       env: GBrainMemoryStore.envFor(this.opts.home),
       stderr: "pipe",
     });
+  }
+
+  async connect(): Promise<void> {
+    if (this.client) return;
+    const transport = this.makeTransport();
     const client = new Client({ name: "remnant", version: "0.1.0" });
     try {
       await client.connect(transport);
     } catch (err) {
       throw this.unavailable(err);
     }
-    transport.stderr?.on("data", (chunk: Buffer) => {
-      for (const line of chunk.toString().split("\n")) {
-        if (!line.trim()) continue;
-        this.stderrTail.push(line);
-        if (this.stderrTail.length > 40) this.stderrTail.shift();
-        this.opts.onStderr?.(line);
-      }
-    });
+    if (transport instanceof StdioClientTransport) {
+      transport.stderr?.on("data", (chunk: Buffer) => {
+        for (const line of chunk.toString().split("\n")) {
+          if (!line.trim()) continue;
+          this.stderrTail.push(line);
+          if (this.stderrTail.length > 40) this.stderrTail.shift();
+          this.opts.onStderr?.(line);
+        }
+      });
+    }
     this.transport = transport;
     this.client = client;
     const tools = await client.listTools();
@@ -135,10 +154,17 @@ export class GBrainMemoryStore implements MemoryStore {
   }
 
   private unavailable(err: unknown): GBrainUnavailableError {
+    const message = err instanceof Error ? err.message : String(err);
+    if (this.opts.url) {
+      return new GBrainUnavailableError(
+        `could not reach the hosted brain at ${this.opts.url}: ${message}`,
+        "Check GBRAIN_MCP_URL and GBRAIN_MCP_TOKEN (issued by `gbrain mcp grant`), or unset GBRAIN_MCP_URL to use a local brain.",
+      );
+    }
     const tail = this.stderrTail.join("\n");
-    const lock = /already open through `gbrain serve`|LiveServeLockError|pglite_busy/i.test(tail + String(err));
+    const lock = /already open through `gbrain serve`|LiveServeLockError|pglite_busy/i.test(tail + message);
     return new GBrainUnavailableError(
-      `could not start gbrain serve: ${err instanceof Error ? err.message : String(err)}\n${tail}`,
+      `could not start gbrain serve: ${message}\n${tail}`,
       lock
         ? "Another `gbrain serve` (probably a Claude Code MCP child) holds the PGLite lock. Stop it (`pkill -f 'gbrain serve'`) or point REMNANT_GBRAIN_HOME at a different brain."
         : "Is gbrain installed? `bun add -g gbrain` then `gbrain init --pglite`.",

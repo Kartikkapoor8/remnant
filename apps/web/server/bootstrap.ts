@@ -10,6 +10,7 @@ import {
   PersonaEngine,
   RiverProvider,
   loadSarahFixture,
+  parseBrainFacts,
   type ImportResult,
   type MemoryStore,
   type ModelProvider,
@@ -19,6 +20,7 @@ import { ElevenLabsVoice, JsonVoiceStore } from "@remnant/voice";
 
 export const REPO_ROOT = resolve(import.meta.dir, "../../..");
 export const DATA_DIR = resolve(REPO_ROOT, ".remnant");
+const BRAIN_DIR = resolve(REPO_ROOT, "brain");
 
 export interface AppContext {
   profile: PersonaProfile;
@@ -35,43 +37,51 @@ export interface AppContext {
   log: (event: string, data: Record<string, unknown>) => void;
 }
 
+/** Knobs for tests and CI; production runs with the defaults and the environment. */
+export interface BootstrapOptions {
+  /** "memory" skips gbrain and uses the facts parsed from brain/. */
+  memory?: "auto" | "memory";
+  /** "fixture" skips the River and Anthropic probes. */
+  provider?: "auto" | "fixture";
+  /** false disables ElevenLabs even when a key is in the environment. */
+  voice?: boolean;
+  /** Where consent.json and voice.json live. Defaults to .remnant/. */
+  dataDir?: string;
+}
+
 function log(event: string, data: Record<string, unknown>): void {
   console.log(`[remnant] ${event} ${JSON.stringify(data)}`);
 }
 
-/** Facts seeded into the InMemoryStore when gbrain is unavailable, mirrored from brain/. */
-async function fallbackFacts(): Promise<{ entity: string; text: string; provenance: string }[]> {
-  const glob = new Bun.Glob("**/*.md");
-  const out: { entity: string; text: string; provenance: string }[] = [];
-  const dir = resolve(REPO_ROOT, "brain");
-  for await (const rel of glob.scan(dir)) {
-    const text = await Bun.file(resolve(dir, rel)).text();
-    const body = text.split("## Compiled Truth")[1]?.split("## Timeline")[0] ?? "";
-    for (const para of body.split(/\n\s*\n/).map((p) => p.replace(/\s+/g, " ").trim()).filter(Boolean)) {
-      out.push({ entity: "people/sarah", text: para, provenance: `brain/${rel}` });
-    }
-  }
-  return out;
+/** The same facts `bun run sarah` seeds into GBrain, held in memory instead. */
+async function inMemoryFacts(profile: PersonaProfile): Promise<InMemoryStore> {
+  const facts = await parseBrainFacts(BRAIN_DIR);
+  return new InMemoryStore(
+    facts.map((f) => ({ entity: f.entity, text: f.text, provenance: f.provenance, kind: f.kind })),
+    [{ slug: `people/${profile.slug}`, title: profile.name, summary: profile.relationship }],
+  );
 }
 
-async function chooseMemory(): Promise<{ memory: MemoryStore; note: string | null }> {
+async function chooseMemory(profile: PersonaProfile, mode: BootstrapOptions["memory"]): Promise<{ memory: MemoryStore; note: string | null }> {
+  if (mode === "memory") return { memory: await inMemoryFacts(profile), note: null };
+  const url = process.env.GBRAIN_MCP_URL;
   const home = process.env.REMNANT_GBRAIN_HOME ? resolve(process.env.REMNANT_GBRAIN_HOME) : undefined;
-  const store = new GBrainMemoryStore({ home, onStderr: (line) => log("gbrain.stderr", { line }) });
+  const store = url
+    ? new GBrainMemoryStore({ url, token: process.env.GBRAIN_MCP_TOKEN })
+    : new GBrainMemoryStore({ home, onStderr: (line) => log("gbrain.stderr", { line }) });
   try {
     await store.connect();
     return { memory: store, note: null };
   } catch (err) {
     const hint = err instanceof GBrainUnavailableError ? err.hint : String(err);
-    log("gbrain.unavailable", { error: err instanceof Error ? err.message.split("\n")[0] : String(err), hint });
-    const seed = await fallbackFacts();
-    return {
-      memory: new InMemoryStore(seed, [{ slug: "people/sarah", title: "Sarah", summary: "partner" }]),
-      note: `GBrain unavailable (${hint}). Using in-memory facts parsed from brain/.`,
-    };
+    log("gbrain.unavailable", { backend: store.backend, error: err instanceof Error ? err.message.split("\n")[0] : String(err), hint });
+    return { memory: await inMemoryFacts(profile), note: `GBrain unavailable (${hint}). Using in-memory facts parsed from brain/.` };
   }
 }
 
-async function chooseProvider(corpus: ImportResult, profile: PersonaProfile): Promise<{ provider: ModelProvider; note: string | null }> {
+async function chooseProvider(corpus: ImportResult, profile: PersonaProfile, mode: BootstrapOptions["provider"]): Promise<{ provider: ModelProvider; note: string | null }> {
+  const fixture = () => new FixtureProvider(corpus.messages, profile.name);
+  if (mode === "fixture") return { provider: fixture(), note: null };
   const river = await RiverProvider.detect(resolve(REPO_ROOT, "training/runs/latest.json"));
   if (river) return { provider: river, note: null };
   if (AnthropicProvider.available()) {
@@ -80,23 +90,21 @@ async function chooseProvider(corpus: ImportResult, profile: PersonaProfile): Pr
       note: "No finished River fine-tune (or its sidecar is down). Falling back to the base model + persona prompt.",
     };
   }
-  return {
-    provider: new FixtureProvider(corpus.messages, profile.name),
-    note: "No model available. Replies are retrieved from the corpus itself.",
-  };
+  return { provider: fixture(), note: "No model available. Replies are retrieved from the corpus itself." };
 }
 
-export async function bootstrap(): Promise<AppContext> {
+export async function bootstrap(opts: BootstrapOptions = {}): Promise<AppContext> {
   const { profile, result: corpus } = await loadSarahFixture();
   const [{ memory, note: memoryNote }, { provider, note: providerNote }] = await Promise.all([
-    chooseMemory(),
-    chooseProvider(corpus, profile),
+    chooseMemory(profile, opts.memory ?? "auto"),
+    chooseProvider(corpus, profile, opts.provider ?? "auto"),
   ]);
+  const dataDir = opts.dataDir ?? DATA_DIR;
   const monitor = new DependencyMonitor();
   const engine = new PersonaEngine({ profile, corpus: corpus.messages, memory, provider, monitor, realPeople: ["maya"], log });
-  const consent = new JsonFileConsentStore(resolve(DATA_DIR, "consent.json"));
-  const voice = ElevenLabsVoice.fromEnv();
-  const voices = new JsonVoiceStore(resolve(DATA_DIR, "voice.json"));
-  log("ready", { provider: provider.label, memory: memory.kind, messages: corpus.messages.length, voice: Boolean(voice) });
+  const consent = new JsonFileConsentStore(resolve(dataDir, "consent.json"));
+  const voice = opts.voice === false ? null : ElevenLabsVoice.fromEnv();
+  const voices = new JsonVoiceStore(resolve(dataDir, "voice.json"));
+  log("ready", { provider: provider.label, memory: memory.backend, messages: corpus.messages.length, voice: Boolean(voice) });
   return { profile, corpus, memory, memoryNote, provider, providerNote, engine, consent, voice, voices, monitor, log };
 }

@@ -33,6 +33,7 @@ interface StoredFact {
  */
 export class InMemoryStore implements MemoryStore {
   readonly kind = "memory" as const;
+  readonly backend = "memory" as const;
   private facts = new Map<string, StoredFact>();
   private entities = new Map<string, { title: string; summary: string }>();
   private seq = 0;

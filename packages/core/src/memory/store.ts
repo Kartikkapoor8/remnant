@@ -40,8 +40,12 @@ export interface EntityCard {
   activeFactCount: number;
 }
 
+/** How the store is reached; reported by GET /api/health. */
+export type MemoryBackend = "gbrain-stdio" | "gbrain-http" | "memory";
+
 export interface MemoryStore {
   readonly kind: "gbrain" | "memory";
+  readonly backend: MemoryBackend;
   /** Retrieve memories relevant to a query. */
   recall(query: string, opts?: RecallOptions): Promise<MemoryHit[]>;
   /** Store a new fact with provenance. */
