@@ -63,3 +63,47 @@ export async function loadDemoScript(slug: string): Promise<DemoScript | null> {
   if (!(await file.exists())) return null;
   return validateDemoScript(await file.json());
 }
+
+/** One spoken line of the scripted call. Bracketed audio tags are delivery cues for ElevenLabs v3. */
+export interface CallLine {
+  id: string;
+  text: string;
+}
+
+export interface CallScript {
+  persona: string;
+  voice: string;
+  model: string;
+  note?: string;
+  lines: CallLine[];
+}
+
+/** Removes ElevenLabs v3 audio tags such as "[quiet]" so guardrails see only spoken words. */
+export function stripAudioTags(text: string): string {
+  return text.replace(/\[[^\]]*\]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+export function validateCallScript(input: unknown): CallScript {
+  const s = input as Partial<CallScript>;
+  if (!s || typeof s.persona !== "string" || typeof s.voice !== "string" || typeof s.model !== "string" || !Array.isArray(s.lines) || s.lines.length === 0) {
+    throw new Error("call script needs persona, voice, model and at least one line");
+  }
+  s.lines.forEach((l, i) => {
+    if (!/^\d{2}$/.test(String(l?.id)) || typeof l?.text !== "string" || !l.text.trim()) throw new Error(`line ${i}: two-digit id and text are required`);
+  });
+  return s as CallScript;
+}
+
+/** Loads fixtures/<slug>/call-script.json, or null when the persona has no call script. */
+export async function loadCallScript(slug: string): Promise<CallScript | null> {
+  if (!/^[a-z0-9-]+$/.test(slug)) return null;
+  const file = Bun.file(resolve(FIXTURES_DIR, slug, "call-script.json"));
+  if (!(await file.exists())) return null;
+  return validateCallScript(await file.json());
+}
+
+/** Absolute path of a generated call clip, or null if the name is not a two-digit mp3. */
+export function callClipPath(slug: string, fileName: string): string | null {
+  if (!/^[a-z0-9-]+$/.test(slug) || !/^\d{2}\.mp3$/.test(fileName)) return null;
+  return resolve(FIXTURES_DIR, slug, "call", fileName);
+}

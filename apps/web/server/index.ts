@@ -1,4 +1,4 @@
-import { checkConsent, createAttestation, createSession, loadDemoScript, type ConversationSession } from "@remnant/core";
+import { callClipPath, checkConsent, createAttestation, createSession, loadCallScript, loadDemoScript, type ConversationSession } from "@remnant/core";
 import { STOCK_VOICE_ID } from "@remnant/voice";
 import { bootstrap, DATA_DIR } from "./bootstrap.ts";
 
@@ -28,6 +28,7 @@ async function voiceStatus() {
   const consent = await checkConsent(ctx.profile, ctx.consent, "voice-clone");
   return {
     enabled: Boolean(ctx.voice),
+    name: ctx.profile.name.toLowerCase(),
     cloned: Boolean(record),
     voiceId: record?.voiceId ?? (ctx.voice ? STOCK_VOICE_ID : null),
     label: record ? `cloned voice (${record.clonedAt.slice(0, 10)})` : ctx.voice ? "stock voice, not cloned" : "voice disabled (no ELEVENLABS_API_KEY)",
@@ -65,6 +66,23 @@ const server = Bun.serve({
       GET: async (req) => {
         const script = await loadDemoScript(req.params.slug);
         return script ? json(script) : json({ error: `no demo script for ${req.params.slug}` }, 404);
+      },
+    },
+
+    "/api/demo/:slug/call-script": {
+      GET: async (req) => {
+        const script = await loadCallScript(req.params.slug);
+        return script ? json(script) : json({ error: `no call script for ${req.params.slug}` }, 404);
+      },
+    },
+
+    "/api/demo/:slug/call/:file": {
+      GET: async (req) => {
+        const path = callClipPath(req.params.slug, req.params.file);
+        if (!path) return json({ error: "bad clip name" }, 400);
+        const file = Bun.file(path);
+        if (!(await file.exists())) return json({ error: "clip not generated; run apps/web/scripts/sarah-voice.ts" }, 404);
+        return new Response(file, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } });
       },
     },
 
