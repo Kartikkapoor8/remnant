@@ -18,6 +18,10 @@ const VAD_THRESHOLD = 0.02;
 const VAD_START_MS = 150;
 const VAD_END_MS = 1100;
 const POST_CLIP_MUTE_MS = 600;
+const FADE_IN_S = 0.15;
+const FADE_OUT_S = 0.25;
+const LINE_NOISE_SRC = "/line-noise.m4a";
+const LINE_NOISE_GAIN = 0.04;
 
 export interface DemoCall {
   analysers: AnalyserNode[];
@@ -48,6 +52,9 @@ export function useDemoCall(slug: string | null, audioEl: HTMLAudioElement | nul
   const pending = useRef<ReturnType<typeof setTimeout> | null>(null);
   const waitingForUser = useRef(false);
   const scriptRef = useRef<CallScript | null>(null);
+  const clipGain = useRef<GainNode | null>(null);
+  const noiseEl = useRef<HTMLAudioElement | null>(null);
+  const fadingOut = useRef(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -72,9 +79,23 @@ export function useDemoCall(slug: string | null, audioEl: HTMLAudioElement | nul
       const el = ac.createAnalyser();
       el.fftSize = 128;
       el.smoothingTimeConstant = 0.7;
-      const src = ac.createMediaElementSource(audioEl);
-      src.connect(el);
-      el.connect(ac.destination);
+      // clip: element -> analyser -> gain (150ms in / 250ms out) -> speaker
+      const gain = ac.createGain();
+      gain.gain.value = 0;
+      ac.createMediaElementSource(audioEl).connect(el);
+      el.connect(gain);
+      gain.connect(ac.destination);
+      clipGain.current = gain;
+      // continuous low phone-line noise for the length of the call
+      const noise = new Audio(LINE_NOISE_SRC);
+      noise.loop = true;
+      noise.preload = "auto";
+      const noiseGain = ac.createGain();
+      noiseGain.gain.value = LINE_NOISE_GAIN;
+      ac.createMediaElementSource(noise).connect(noiseGain);
+      noiseGain.connect(ac.destination);
+      noise.play().catch(() => {});
+      noiseEl.current = noise;
       ctx.current = ac;
       setAnalysers((prev) => [...prev, el]);
     }
@@ -97,6 +118,20 @@ export function useDemoCall(slug: string | null, audioEl: HTMLAudioElement | nul
       setPlaying(true);
       mutedUntil.current = Number.POSITIVE_INFINITY;
       audioEl.src = api.callClipUrl(slug, line.id);
+      fadingOut.current = false;
+      const g = clipGain.current!.gain;
+      g.cancelScheduledValues(ac.currentTime);
+      g.setValueAtTime(0, ac.currentTime);
+      g.linearRampToValueAtTime(1, ac.currentTime + FADE_IN_S);
+      audioEl.ontimeupdate = () => {
+        const remaining = audioEl.duration - audioEl.currentTime;
+        if (!fadingOut.current && Number.isFinite(remaining) && remaining <= FADE_OUT_S) {
+          fadingOut.current = true;
+          g.cancelScheduledValues(ac.currentTime);
+          g.setValueAtTime(g.value, ac.currentTime);
+          g.linearRampToValueAtTime(0, ac.currentTime + Math.max(0.05, remaining));
+        }
+      };
       const onEnd = () => {
         playingRef.current = false;
         setPlaying(false);
@@ -149,6 +184,12 @@ export function useDemoCall(slug: string | null, audioEl: HTMLAudioElement | nul
     if (playingRef.current) return;
     void play(index.current);
   }, [play]);
+
+  // Connect: the AudioContext (and the line noise) start as soon as the call screen mounts,
+  // inside the answer tap's gesture, before the mic prompt can interrupt it.
+  useEffect(() => {
+    if (slug && audioEl) void ensureContext();
+  }, [slug, audioEl, ensureContext]);
 
   // Arm the first clip (after_user by script) once the script is known.
   useEffect(() => {
@@ -226,6 +267,10 @@ export function useDemoCall(slug: string | null, audioEl: HTMLAudioElement | nul
     return () => {
       clearPending();
       micStream.current?.getTracks().forEach((t) => t.stop());
+      if (noiseEl.current) {
+        noiseEl.current.pause();
+        noiseEl.current.src = "";
+      }
       ctx.current?.close().catch(() => {});
     };
   }, []);
