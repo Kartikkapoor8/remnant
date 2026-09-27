@@ -1,0 +1,26 @@
+name: ci
+
+on:
+  push:
+    branches: [main, harden]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # The fixture's timestamps are local-time; keep CI on the timezone the corpus was written in.
+      TZ: America/Los_Angeles
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+      - name: SFT export dry run on the fixture (stdlib only, no River call)
+        run: python training/export_sft.py --dry-run
