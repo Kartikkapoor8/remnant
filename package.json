@@ -1,0 +1,17 @@
+{
+  "name": "remnant",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*", "services/*"],
+  "scripts": {
+    "dev": "bun run --filter @remnant/web dev",
+    "server": "bun run --filter @remnant/web server",
+    "test": "bun test",
+    "typecheck": "bunx tsc -p tsconfig.json --noEmit",
+    "brain:import": "bun run scripts/import-brain.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.0"
+  }
+}

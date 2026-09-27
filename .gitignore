@@ -27,3 +27,9 @@ logs
 node_modules
 out
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+# remnant
+training/runs/
+training/data/*.jsonl
+apps/web/dist
+*.pglite
+.remnant/
