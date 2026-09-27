@@ -56,6 +56,9 @@ input:focus { border-color: rgba(237, 232, 223, 0.18); }
 
 /* ---------- header ---------- */
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   flex-shrink: 0;
   background: var(--bg);
   display: flex;
@@ -403,4 +406,21 @@ input:focus { border-color: rgba(237, 232, 223, 0.18); }
     transition-duration: 0.01ms !important;
   }
   .typing { box-shadow: 0 0 16px var(--accent-glow); }
+}
+
+/* ---------- debug overlay (?debug=1) ---------- */
+.debug {
+  position: fixed;
+  top: calc(var(--safe-top) + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(20, 20, 22, 0.9);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  white-space: nowrap;
+  pointer-events: none;
 }

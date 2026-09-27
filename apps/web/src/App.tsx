@@ -7,7 +7,8 @@ import { Footer } from "./components/Footer.tsx";
 import { Header } from "./components/Header.tsx";
 import { Intro } from "./components/Intro.tsx";
 import { Thread } from "./components/Thread.tsx";
-import { demoSlugFromLocation } from "./demoMode.ts";
+import { DebugOverlay } from "./components/DebugOverlay.tsx";
+import { debugFromLocation, demoSlugFromLocation } from "./demoMode.ts";
 import { useConversation } from "./hooks/useConversation.ts";
 import { useVisualViewport } from "./hooks/useVisualViewport.ts";
 
@@ -31,6 +32,7 @@ export function App() {
     <div className="app">
       {!introDone && <Intro onDone={() => setIntroDone(true)} />}
       <Header state={state} onCall={() => setCalling(true)} pulse={convo.callPulse} />
+      {debugFromLocation() && <DebugOverlay />}
       <Thread convo={convo} />
       {convo.error && <div className="card card--danger">{convo.error}</div>}
       <Composer disabled={!state || convo.typing} personaName={state?.persona.name ?? ""} onSend={convo.send} />
