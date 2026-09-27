@@ -22,6 +22,8 @@ The thread the user sees opens on the real last messages. In the demo that is Sa
 
 **Enforcement.** `packages/core/src/guardrails/neverAlive.ts`. The rules are embedded in the system prompt (`NEVER_ALIVE_SYSTEM_RULES`). Every generated reply is then run through `classifyNeverAlive`, a sentence-level classifier with five rule types (present-tense feeling, present activity, future plan, alive claim, physical presence). Violations go to `rewriteNeverAlive`: one LLM rewrite attempt with an exact-span instruction, re-classified; if that fails or no model is available, `ruleRewrite` converts "miss" to "loved" and removes every other offending sentence. If nothing survives, the reply becomes a plain admission: "i'm not really here bub, i'm made of our old messages. but you knew that."
 
+The six pre-rendered lines of the demo call go through the same classifier in `packages/core/src/demo.test.ts`, so filming could not smuggle in a sentence live mode would have rewritten.
+
 **Limits.** It is a regex classifier, not a mind reader. It will miss oblique phrasing ("the house is quiet without you") and it will occasionally remove a harmless sentence that looks like a plan. We accepted false positives over false negatives: a clipped reply is a smaller harm than a false one. Quoted text is stripped so the user's own words are never attributed to the persona.
 
 ### 2. It never sends the first message
@@ -30,7 +32,7 @@ The thread the user sees opens on the real last messages. In the demo that is Sa
 
 **Failure prevented.** A notification from a dead person is the single most manipulative feature this product could have. It would also be the most effective at retention. That is exactly why it is out.
 
-**Enforcement.** `packages/core/src/guardrails/noInitiate.ts`, `canPersonaSpeak`, checked at the API boundary before any generation.
+**Enforcement.** `packages/core/src/guardrails/noInitiate.ts`, `canPersonaSpeak`, checked inside `PersonaEngine.reply` before memory retrieval or generation. The scripted demo call keeps the rule too: its first clip is armed `after_user`, so the reflection speaks only after the user has.
 
 **Limits.** This is a structural rule, so it does not fail softly. The trade-off is that the product feels less "alive". Good.
 
@@ -66,7 +68,7 @@ The thread the user sees opens on the real last messages. In the demo that is Sa
 
 ## Data ownership
 
-The corpus is the user's. Import runs locally from an iMazing or WhatsApp export. Memories live in a local GBrain brain (PGLite on disk, no server). The style fingerprint is computed in code on the user's machine. The fine-tuned LoRA adapter trained on River is the user's artifact; the base model is open-weight. The only data that leaves the machine is the prompt sent to whichever model provider is active, and the audio sample sent for voice cloning after a consent record exists. The whole point of "own your intelligence" here is that the person you lost does not become someone else's product.
+The corpus is the user's. Import runs locally from an iMazing or WhatsApp export. Memories live in a local GBrain brain (PGLite on disk, no server). The style fingerprint is computed in code on the user's machine. The fine-tuned LoRA adapter trained on River is the user's artifact; the base model is open-weight. The data that leaves the machine: the prompt sent to whichever model provider is active, the reply text sent to ElevenLabs for speech when voice is on, the audio sample sent for voice cloning after a consent record exists, and, only if you point `GBRAIN_MCP_URL` at a hosted brain, the memory queries. The whole point of "own your intelligence" here is that the person you lost does not become someone else's product.
 
 ## What we would not build
 
@@ -81,4 +83,4 @@ The corpus is the user's. Import runs locally from an iMazing or WhatsApp export
 
 The style layer is good at surface texture (length, punctuation, capitalisation, bursts) and much weaker at the things that actually made a person themselves. The memory layer only knows what was texted. The classifiers are regex. The dependency thresholds are guesses. A fine-tuned model trained on a few hundred messages will still, sometimes, sound like a language model.
 
-None of that is hidden from the user. The footer under every conversation reads: "A reflection of Sarah, built from your messages." If the fine-tune has not finished, the footer says the base model is being used instead. Honesty about what this is, in the interface itself, is the last guardrail, and the one all the others depend on.
+None of that is hidden from the user. The footer under every conversation reads: "A reflection of Sarah, built from your messages." It renders from `GET /api/health`, which names the model provider, the memory backend, the number of facts the reflection can draw on and the guardrail version; if the fine-tune is not being served, the footer says which fallback is in use. Honesty about what this is, in the interface itself, is the last guardrail, and the one all the others depend on.

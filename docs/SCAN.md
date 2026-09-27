@@ -1,0 +1,20 @@
+# Scan
+
+A one-page map for an automated reviewer. Run `bun install && bun test` (198 tests, offline, about a second; 5 need a live brain), `bun run typecheck`, then `bun run demo` and open the URL it prints; CI (`.github/workflows/ci.yml`) runs the same plus `python training/export_sft.py --dry-run`.
+
+| File | What it does | Test that proves it |
+|---|---|---|
+| `packages/core/src/persona/engine.ts` | The pipeline, in a fixed order: crisis check, noInitiate, memory recall, prompt, model, neverAlive rewrite, StyleEnforcer, corpus greeting, burst delays. Returns bursts with the memories used and which guardrails fired. | `packages/core/src/persona/engine.test.ts` |
+| `packages/core/src/guardrails/neverAlive.ts` | Sentence-level classifier with five rule types, one LLM rewrite, then a deterministic rule rewrite; `classifyInContext` catches a bare "ya" to "do you miss me". The rules are also embedded in the prompt. | `packages/core/src/guardrails/neverAlive.test.ts` (21 tests) |
+| `packages/core/src/guardrails/crisisBypass.ts` | `detectCrisis` on the raw user text before anything else; on a hit the persona is not invoked and Remnant answers with 988 and other resources. Common idioms are suppressed. | `packages/core/src/guardrails/crisisBypass.test.ts`, `persona/engine.test.ts`, `apps/web/server/app.test.ts` |
+| `packages/core/src/memory/gbrain.ts` | `MemoryStore` over a real GBrain brain with the official MCP client: a stdio child (`gbrain serve --surface verbs`) or Streamable HTTP (`GBRAIN_MCP_URL`). Recall ranks the entity's facts by overlap and adds page hits; every hit carries provenance. | `packages/core/src/memory/gbrain.test.ts` (live brain, runs with `REMNANT_GBRAIN_HOME`); the deterministic twin in `memory/inMemory.test.ts` |
+| `packages/core/src/memory/brainSeed.ts` | Turns `brain/*.md` into atomic facts (Compiled Truth sentences, Timeline events) for `remember`; `auditBrain` checks the pages against the corpus so they cannot drift. | `packages/core/src/memory/brainSeed.test.ts` |
+| `packages/core/src/stylometry/fingerprint.ts` | Measures the person's mechanics from the corpus: lengths, punctuation, case, emoji, bursts, laugh word, pet names, openers. Code, not a model. | `packages/core/src/stylometry/fingerprint.test.ts`; `fixtures.test.ts` checks `fixtures/sarah/fingerprint.json` matches |
+| `packages/core/src/style/enforcer.ts` | Forces model output back onto the fingerprint: word-boundary truncation, periods, case, laugh token, burst split, one seeded imperfection. Deterministic under a seed. | `packages/core/src/style/enforcer.test.ts` (23 tests, invariants across 50 seeds) |
+| `packages/core/src/adapters/whatsapp.ts` | Parses Android and iOS WhatsApp exports (LRM marks, narrow spaces, multi-line messages, media and system lines) into normalised messages; the fixture goes through it at load time. | `packages/core/src/adapters/whatsapp.test.ts`, `fixtures.test.ts` |
+| `packages/core/src/providers/river.ts` with `training/train.py` and `training/serve.py` | The owned model: `train.py` runs the River LoRA and writes `runs/latest.json`; `serve.py` holds one River session as an HTTP sidecar; `RiverProvider.detect` selects it only when both the manifest and `/health` exist. | `training/export_sft.py --dry-run` in CI; the run log in `training/runs/`; `apps/web/server/app.test.ts` boots with the fixture provider and checks `/api/health` names it |
+| `apps/web/server/app.ts` with `bootstrap.ts` | The routes (`/api/health`, state, consent, chat, demo, voice) and the boot that picks memory and model and names every fallback. | `apps/web/server/app.test.ts` |
+
+Also worth a look: `services/voice/src/index.ts` (ElevenLabs clone and TTS, no consent logic on purpose; `index.test.ts`), `scripts/demo.ts` and `scripts/sarah.ts` (the two commands), `fixtures/sarah/` (corpus, profile, demo and call scripts, fingerprint), `brain/` (the nine GBrain pages), `docs/ETHICS.md` (every line and why), `docs/DECISIONS.md` (the day, in order).
+
+Everything in `fixtures/` and `brain/` is fictional; every person, place and pet in them is invented.
