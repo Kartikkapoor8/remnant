@@ -53,7 +53,7 @@ export function useDemoCall(slug: string | null, audioEl: HTMLAudioElement | nul
   const waitingForUser = useRef(false);
   const scriptRef = useRef<CallScript | null>(null);
   const clipGain = useRef<GainNode | null>(null);
-  const noiseEl = useRef<HTMLAudioElement | null>(null);
+  const noiseSource = useRef<AudioBufferSourceNode | null>(null);
   const fadingOut = useRef(false);
 
   useEffect(() => {
@@ -86,16 +86,25 @@ export function useDemoCall(slug: string | null, audioEl: HTMLAudioElement | nul
       el.connect(gain);
       gain.connect(ac.destination);
       clipGain.current = gain;
-      // continuous low phone-line noise for the length of the call
-      const noise = new Audio(LINE_NOISE_SRC);
-      noise.loop = true;
-      noise.preload = "auto";
+      // continuous low phone-line noise for the length of the call: its own
+      // looping AudioBufferSourceNode into its own GainNode, independent of the
+      // clip element, so clip playback can never pause or reset it.
       const noiseGain = ac.createGain();
       noiseGain.gain.value = LINE_NOISE_GAIN;
-      ac.createMediaElementSource(noise).connect(noiseGain);
       noiseGain.connect(ac.destination);
-      noise.play().catch(() => {});
-      noiseEl.current = noise;
+      fetch(LINE_NOISE_SRC)
+        .then((r) => r.arrayBuffer())
+        .then((buf) => ac.decodeAudioData(buf))
+        .then((decoded) => {
+          if (ac.state === "closed") return;
+          const src = ac.createBufferSource();
+          src.buffer = decoded;
+          src.loop = true;
+          src.connect(noiseGain);
+          src.start();
+          noiseSource.current = src;
+        })
+        .catch(() => {});
       ctx.current = ac;
       setAnalysers((prev) => [...prev, el]);
     }
@@ -267,9 +276,10 @@ export function useDemoCall(slug: string | null, audioEl: HTMLAudioElement | nul
     return () => {
       clearPending();
       micStream.current?.getTracks().forEach((t) => t.stop());
-      if (noiseEl.current) {
-        noiseEl.current.pause();
-        noiseEl.current.src = "";
+      try {
+        noiseSource.current?.stop();
+      } catch {
+        /* already stopped */
       }
       ctx.current?.close().catch(() => {});
     };
