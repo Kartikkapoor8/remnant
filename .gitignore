@@ -34,3 +34,7 @@ apps/web/dist
 *.pglite
 .remnant/
 __pycache__/
+
+# submission video: keep notes, frames and generated audio in video/out; big renders are ignored by video/out/.gitignore
+!video/out/
+video/inbox/
