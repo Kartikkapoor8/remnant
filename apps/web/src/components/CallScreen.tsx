@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import type { AppState } from "../api.ts";
 import { api } from "../api.ts";
 import { Waveform } from "./Waveform.tsx";
@@ -20,6 +21,14 @@ function fmt(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+function EndGlyph() {
+  return (
+    <svg className="call__end-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12c5-4.5 13-4.5 18 0l-1.5 2.5-3.5-1v-2.3a11 11 0 0 0-8 0v2.3l-3.5 1z" />
+    </svg>
+  );
+}
+
 /**
  * Voice call screen. The call is the same persona pipeline as texting: the
  * user's utterance goes through guardrails, memory, model and StyleEnforcer,
@@ -27,6 +36,7 @@ function fmt(seconds: number): string {
  * for the utterance so the demo does not depend on speech recognition.
  */
 export function CallScreen({ state, send, lastReply, onEnd, silent = false }: Props) {
+  const reduced = useReducedMotion();
   const [seconds, setSeconds] = useState(0);
   const [status, setStatus] = useState("connected");
   const [utterance, setUtterance] = useState("");
@@ -88,26 +98,30 @@ export function CallScreen({ state, send, lastReply, onEnd, silent = false }: Pr
   };
 
   return (
-    <div className="call">
-      <div>
+    <motion.div className="call" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: reduced ? 0.2 : 0.4 }}>
+      <div className="call__top">
         <div className="call__name">{state.persona.name}</div>
         <div className="call__timer">{fmt(seconds)}</div>
       </div>
-      <Waveform active={silent || status === "speaking"} />
-      <div className="call__transcript">{lastReply ?? "say something"}</div>
-      <div className="call__status">
-        {status} · {state.voice.label}
-        <br />a reflection, built from your messages
+      <div className="call__middle">
+        <Waveform active={silent || status === "speaking"} />
+        <div className="call__transcript">{lastReply ?? ""}</div>
+        <div className="call__status">
+          {status} · {state.voice.label}
+          <br />a reflection, built from your messages
+        </div>
       </div>
-      <form onSubmit={submit} className="call__controls">
-        <input className="call__input" value={utterance} onChange={(e) => setUtterance(e.target.value)} placeholder="Say something" enterKeyHint="send" />
-        <button className="call__btn call__btn--talk" type="submit" disabled={busy || !utterance.trim()}>
-          Talk
+      <div className="call__bottom">
+        <form onSubmit={submit} className="call__form">
+          <input className="call__input" value={utterance} onChange={(e) => setUtterance(e.target.value)} placeholder="say something" enterKeyHint="send" />
+          <button className="call__talk" type="submit" disabled={busy || !utterance.trim()}>
+            talk
+          </button>
+        </form>
+        <button className="call__end" type="button" onClick={onEnd} aria-label="End call">
+          <EndGlyph />
         </button>
-        <button className="call__btn call__btn--end" type="button" onClick={onEnd}>
-          End
-        </button>
-      </form>
-    </div>
+      </div>
+    </motion.div>
   );
 }

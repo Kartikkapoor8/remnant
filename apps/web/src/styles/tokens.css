@@ -1,17 +1,16 @@
 :root {
   color-scheme: dark;
-  --color-bg: #000000;
-  --color-surface: #111214;
-  --color-surface-raised: #1a1b1e;
-  --color-text: #f2f2f2;
-  --color-text-muted: #8a8f98;
-  --color-text-faint: #5c6068;
-  --color-bubble-them: #26272b;
-  --color-bubble-me: #2f6fed;
-  --color-bubble-me-text: #ffffff;
-  --color-accent: #2f6fed;
-  --color-danger: #d9534f;
-  --color-border: #232428;
+
+  --bg: #0B0B0C;
+  --surface: #141416;
+  --bubble-them: #1C1C1F;
+  --bubble-me: #26231D;
+  --text: #EDE8DF;
+  --text-muted: #8A857B;
+  --accent: #C9A46A;
+  --accent-glow: rgba(201, 164, 106, 0.35);
+  --hairline: rgba(237, 232, 223, 0.08);
+  --danger: #B8564A;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -21,15 +20,23 @@
   --space-6: 32px;
 
   --radius-bubble: 18px;
-  --radius-control: 20px;
+  --radius-input: 22px;
 
-  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
   --text-xs: 11px;
-  --text-sm: 13px;
+  --text-sm: 12px;
   --text-md: 16px;
-  --text-lg: 20px;
-  --text-xl: 28px;
+  --text-name: 22px;
+  --text-call-name: 34px;
+  --text-wordmark: 28px;
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --spring-fast: 180ms;
 }

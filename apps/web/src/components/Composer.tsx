@@ -2,10 +2,11 @@ import { useState, type FormEvent } from "react";
 
 interface Props {
   disabled: boolean;
+  personaName: string;
   onSend: (text: string) => Promise<void>;
 }
 
-export function Composer({ disabled, onSend }: Props) {
+export function Composer({ disabled, personaName, onSend }: Props) {
   const [text, setText] = useState("");
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -20,13 +21,13 @@ export function Composer({ disabled, onSend }: Props) {
         className="composer__input"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Text Message"
+        placeholder={`message ${personaName}`.toLowerCase()}
         autoComplete="off"
         autoCorrect="on"
         enterKeyHint="send"
       />
       <button className="composer__send" type="submit" disabled={disabled || !text.trim()}>
-        Send
+        send
       </button>
     </form>
   );
