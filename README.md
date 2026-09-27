@@ -15,7 +15,7 @@ The last text in the thread is from eight months ago. Remnant learns how she typ
 
 Live tonight: [developmental-sbjct-lexmark-deviant.trycloudflare.com](https://developmental-sbjct-lexmark-deviant.trycloudflare.com)
 
-Video (44 s): [github.com/Kartikkapoor8/remnant/blob/explainer/video/explainer.mp4](https://github.com/Kartikkapoor8/remnant/blob/explainer/video/explainer.mp4)
+Video (44 s): [video/explainer.mp4](video/explainer.mp4)
 
 | What's real | What's demo | What's next |
 |---|---|---|
