@@ -10,7 +10,7 @@ Bun workspaces, three packages: `packages/core` (everything that is not a UI
 or a vendor call), `services/voice` (ElevenLabs), `apps/web` (React UI plus the
 Bun API server). Core has no React and no vendor SDK except the Anthropic and
 MCP clients, so every authenticity and guardrail decision is testable with
-`bun test` offline. That was the point: an automated reviewer can run ~180
+`bun test` offline. That was the point: an automated reviewer can run 198
 tests without keys, and the demo can run without a network.
 
 ## Vite in front, Bun API behind
@@ -23,14 +23,33 @@ it owns a child process (`gbrain serve`) and holds in-process session state;
 mixing that into a Vite dev server would have coupled our memory lifecycle to
 the bundler's restarts.
 
+The server is two files. `bootstrap.ts` picks the memory store and the model
+provider, names every fallback, and takes knobs for tests (`memory`,
+`provider`, `voice`, `dataDir`) so a route test can boot the real server with
+the in-memory facts and the fixture provider on a random port without keys,
+a gbrain child or a network (`app.test.ts`). `app.ts` holds the routes.
+`GET /api/health` reports the provider id (`river-finetuned`, `anthropic`,
+`fixture`), the memory backend (`gbrain-stdio`, `gbrain-http`, `memory`), the
+active fact count for the persona and `GUARDRAILS_VERSION`; the footer renders
+from it, so what the UI claims is what the server chose. `bun run demo`
+(`scripts/demo.ts`) runs the brain import, the River sidecar when it can, the
+API and Vite, waits for `/api/health` and the page, and prints the URLs;
+`PORT` and `WEB_PORT` move the ports so a second stack can run beside a live
+one. `bun run sarah` rebuilds the persona from `fixtures/` and audits `brain/`
+against the corpus.
+
 ## MemoryStore: one interface, two implementations
 
 `packages/core/src/memory/store.ts` defines `recall`, `remember`, `entity`,
 `forget`, `close`. `InMemoryStore` is the deterministic test double.
 `GBrainMemoryStore` spawns `gbrain serve --surface verbs` and speaks MCP over
-stdio with the official `@modelcontextprotocol/sdk` client. We use four of the
-seven verbs at runtime and deliberately skip `synthesize`: it runs an LLM
-inside gbrain, and the persona prompt already reasons over retrieved facts.
+stdio with the official `@modelcontextprotocol/sdk` client, or, when
+`GBRAIN_MCP_URL` is set, connects to a hosted brain over Streamable HTTP with
+a bearer token; `backend` says which. We use four of the seven verbs at
+runtime and deliberately skip `synthesize`: it runs an LLM inside gbrain, and
+the persona prompt already reasons over retrieved facts. When gbrain is not
+available the fallback `InMemoryStore` is seeded through the same
+`parseBrainFacts`, so it holds exactly the 78 facts the brain would.
 
 Recall ranks client-side. The brain has no embedding provider (keyless), so
 gbrain's page-search arm is keyword-only and missed obvious queries in
@@ -63,10 +82,11 @@ than a semantically thin one.
 ## Providers and the explicit-fallback rule
 
 `ModelProvider` is a one-method interface. Order in `bootstrap.ts`:
-`RiverProvider` if `training/runs/latest.json` has a checkpoint AND the
-sidecar answers `/health`; else `AnthropicProvider` if credentials exist;
-else `FixtureProvider`. The rule is that a fallback is never silent:
-`/api/state` carries a `provider.note` and the footer prints it. The
+`RiverProvider` (id `river-finetuned`) if `training/runs/latest.json` has a
+checkpoint AND the sidecar answers `/health`; else `AnthropicProvider` if
+credentials exist; else `FixtureProvider`. The rule is that a fallback is never
+silent: `/api/health` carries the provider id, its label and a `providerNote`,
+and the footer prints them. The
 FixtureProvider deserves a word: it does not generate. It builds (user
 message, her reply burst) pairs from the corpus and returns the burst whose
 prompt best overlaps the incoming text, hashed deterministically when nothing
@@ -116,6 +136,19 @@ own. We also learned that a brain initialised inside a git worktree accepts
 imports but rejects every `remember` with a storage error, so the dev brain
 lives at `~/.remnant-dev`. If the child dies with a lock error, the server
 logs the exact fix and falls back to in-memory facts parsed from `brain/`.
+
+## Scripted demo and the call
+
+`?demo=sarah` swaps only the model call for `fixtures/sarah/demo-script.json`;
+everything else on screen is the live code, and `demo.test.ts` runs the
+scripted bursts through the same neverAlive, crisis and StyleEnforcer-shape
+checks as live output. The demo call plays six pre-rendered ElevenLabs clips.
+An energy VAD on the microphone decides when the user has finished speaking
+(`after_user` clips fire a fixed delay after that, `auto` clips after the
+previous clip), a tap forces the next clip so a take cannot get stuck, and a
+denied microphone silently becomes tap mode. The live call still types the
+utterance and speaks the reply through TTS; speech input for it is on the
+list below.
 
 ## Remnant as a QM agent
 
