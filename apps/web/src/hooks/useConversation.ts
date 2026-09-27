@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DemoReplyStep, DemoStep } from "@remnant/core";
-import { api, type AppState, type ChatResult, type DemoScript, type Message } from "../api.ts";
+import { api, type AppState, type ChatResult, type DemoScript, type HealthReport, type Message } from "../api.ts";
 
 /** Browser-side twin of core's isReplyStep (core itself is server-only code). */
 function isReplyStep(step: DemoStep): step is DemoReplyStep {
@@ -20,6 +20,8 @@ export interface CrisisCardData {
 
 export interface Conversation {
   state: AppState | null;
+  /** What the server chose: provider, memory backend, fact count, guardrail version. */
+  health: HealthReport | null;
   error: string | null;
   items: ThreadItem[];
   typing: boolean;
@@ -48,6 +50,7 @@ function newSessionId(): string {
  */
 export function useConversation(demoSlug: string | null = null): Conversation {
   const [state, setState] = useState<AppState | null>(null);
+  const [health, setHealth] = useState<HealthReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<ThreadItem[]>([]);
   const [typing, setTyping] = useState(false);
@@ -61,8 +64,9 @@ export function useConversation(demoSlug: string | null = null): Conversation {
 
   const refresh = useCallback(async () => {
     try {
-      const s = await api.state();
+      const [s, h] = await Promise.all([api.state(), api.health()]);
       setState(s);
+      setHealth(h);
       setItems(s.history.map((m, i) => ({ ...m, id: `h-${i}` })));
       setError(null);
     } catch (e) {
@@ -155,5 +159,5 @@ export function useConversation(demoSlug: string | null = null): Conversation {
     [demo, runScripted, pushPersona],
   );
 
-  return { state, error, items, typing, crisis, blocked, lastReply, demo, callPulse, send, refresh };
+  return { state, health, error, items, typing, crisis, blocked, lastReply, demo, callPulse, send, refresh };
 }

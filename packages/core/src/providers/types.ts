@@ -10,7 +10,7 @@ export interface CompletionRequest {
   temperature?: number;
 }
 
-export type ProviderId = "river" | "anthropic" | "fixture";
+export type ProviderId = "river-finetuned" | "anthropic" | "fixture";
 
 /**
  * A swappable text-completion backend for the persona.

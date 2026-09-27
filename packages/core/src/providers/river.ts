@@ -21,7 +21,7 @@ export const DEFAULT_RIVER_SIDECAR = "http://127.0.0.1:8765";
  * sidecar exist, so the fallback to the base model is explicit, never silent.
  */
 export class RiverProvider implements ModelProvider {
-  readonly id = "river" as const;
+  readonly id = "river-finetuned" as const;
   readonly label: string;
   readonly ownedModel = true;
 

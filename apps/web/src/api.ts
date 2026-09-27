@@ -1,11 +1,10 @@
 import type { CallScript, DemoScript, EngineResult, MemoryHit, Message, PersonaProfile } from "@remnant/core";
+import type { HealthReport } from "../server/app.ts";
 
 export interface AppState {
   persona: PersonaProfile;
   history: Message[];
   corpus: { messages: number; source: string; skipped: number };
-  provider: { id: string; label: string; ownedModel: boolean; note: string | null };
-  memory: { kind: string; note: string | null };
   style: string;
   greeting: string | null;
   consent: { allowed: boolean; reason: string };
@@ -13,7 +12,7 @@ export interface AppState {
 }
 
 export type ChatResult = EngineResult;
-export type { CallScript, DemoScript, MemoryHit, Message };
+export type { CallScript, DemoScript, HealthReport, MemoryHit, Message };
 
 async function expectOk<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -25,6 +24,7 @@ async function expectOk<T>(res: Response): Promise<T> {
 
 export const api = {
   state: () => fetch("/api/state").then((r) => expectOk<AppState>(r)),
+  health: () => fetch("/api/health").then((r) => expectOk<HealthReport>(r)),
   chat: (sessionId: string, text: string) =>
     fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sessionId, text }) }).then(
       async (r) => (r.status === 403 ? ((await r.json()) as ChatResult) : expectOk<ChatResult>(r)),
