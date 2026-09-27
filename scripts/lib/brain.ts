@@ -1,3 +1,4 @@
+import { mkdirSync, realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { GBrainMemoryStore, parseBrainFacts, seedBrainFacts, type SeedReport } from "@remnant/core";
 
@@ -14,8 +15,9 @@ export function gbrainInstalled(): boolean {
 }
 
 async function gbrain(args: string[], home: string): Promise<number> {
+  // gbrain init rejects a symlinked component in the path (/tmp on macOS is one), so hand it the real path.
   const proc = Bun.spawn(["gbrain", ...args], {
-    env: { ...process.env, GBRAIN_HOME: home },
+    env: { ...process.env, GBRAIN_HOME: realpathSync(home) },
     stdin: "ignore",
     stdout: "inherit",
     stderr: "inherit",
@@ -26,6 +28,7 @@ async function gbrain(args: string[], home: string): Promise<number> {
 /** Creates a PGLite brain under <home>/.gbrain when there is none. */
 export async function ensureBrain(home: string): Promise<"created" | "exists"> {
   if (await Bun.file(resolve(home, ".gbrain", "config.json")).exists()) return "exists";
+  mkdirSync(home, { recursive: true }); // gbrain init does not create the parent
   const code = await gbrain(["init", "--pglite"], home);
   if (code !== 0) throw new Error(`gbrain init exited ${code}`);
   return "created";
@@ -53,7 +56,7 @@ export async function importBrain(home: string, log: (line: string) => void = (l
   const facts = await parseBrainFacts(BRAIN_DIR);
   let pages = 0;
   for await (const _ of new Bun.Glob("**/*.md").scan(BRAIN_DIR)) pages += 1;
-  const store = new GBrainMemoryStore({ home, timeoutMs: 30_000 });
+  const store = new GBrainMemoryStore({ home: realpathSync(home), timeoutMs: 30_000 });
   await store.connect();
   try {
     const seed = await seedBrainFacts(store, facts, log);
