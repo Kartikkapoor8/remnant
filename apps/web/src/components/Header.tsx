@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { AppState } from "../api.ts";
 import { relativeLabel } from "../time.ts";
+import { Avatar } from "./Avatar.tsx";
 
 interface Props {
   state: AppState | null;
@@ -25,9 +26,12 @@ export function Header({ state, onCall, pulse = false }: Props) {
   const last = state?.persona.lastMessageAt ? `last real message ${relativeLabel(state.persona.lastMessageAt)}` : "";
   return (
     <header className="header">
-      <div>
-        <div className="header__name">{name}</div>
-        <div className="header__sub">{last}</div>
+      <div className="header__identity">
+        {name && <Avatar name={name} size={40} />}
+        <div>
+          <div className="header__name">{name}</div>
+          <div className="header__sub">{last}</div>
+        </div>
       </div>
       <button className="call-button" onClick={onCall} disabled={!state?.voice.enabled} aria-label="Call">
         <PhoneGlyph />
