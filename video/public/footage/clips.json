@@ -1,0 +1,18 @@
+{
+  "gap": {
+    "file": "footage/gap.webm",
+    "start": 3.19
+  },
+  "typing": {
+    "file": "footage/thread.webm",
+    "start": 5.62
+  },
+  "bursts": {
+    "file": "footage/thread.webm",
+    "start": 8.93
+  },
+  "call": {
+    "file": "footage/call.webm",
+    "start": 2.98
+  }
+}
