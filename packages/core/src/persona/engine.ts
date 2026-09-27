@@ -3,7 +3,7 @@ import type { MemoryStore } from "../memory/store.ts";
 import type { ModelProvider, ChatTurn } from "../providers/types.ts";
 import { computeFingerprint, type StyleFingerprint } from "../stylometry/fingerprint.ts";
 import { StyleEnforcer } from "../style/enforcer.ts";
-import { classifyNeverAlive, rewriteNeverAlive, type Violation } from "../guardrails/neverAlive.ts";
+import { classifyInContext, classifyNeverAlive, rewriteNeverAlive, TIMELESS_LINE, type Violation } from "../guardrails/neverAlive.ts";
 import { canPersonaSpeak, recordTurn, type SessionState } from "../guardrails/noInitiate.ts";
 import { DependencyMonitor, fallbackNudgeLine } from "../guardrails/dependencyMonitor.ts";
 import { crisisResponse, detectCrisis, type CrisisResponse } from "../guardrails/crisisBypass.ts";
@@ -128,6 +128,13 @@ export class PersonaEngine {
         : (t: string, instruction: string) =>
             this.deps.provider.complete({ system: instruction, turns: [{ role: "user", content: t }], maxTokens: 300 });
     const guarded = await rewriteNeverAlive(raw, { personaName: this.deps.profile.name, rewriter });
+    // A bare "ya" to "do you miss me" carries no verb but is still a present-tense claim.
+    const contextual = classifyInContext(text, guarded.text);
+    if (contextual) {
+      guarded.violations = [...guarded.violations, contextual];
+      guarded.strategy = "rule";
+      guarded.text = guarded.text.replace(contextual.span, TIMELESS_LINE);
+    }
     if (guarded.violations.length) this.log("neverAlive", { strategy: guarded.strategy, violations: guarded.violations });
 
     // 7. Mechanical layer: the StyleEnforcer makes it read like their texting.

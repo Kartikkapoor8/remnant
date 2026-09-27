@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { classifyNeverAlive, ruleRewrite, rewriteNeverAlive, FALLBACK_LINE, NEVER_ALIVE_SYSTEM_RULES, type Violation } from "./neverAlive.ts";
+import { classifyInContext, classifyNeverAlive, ruleRewrite, rewriteNeverAlive, FALLBACK_LINE, NEVER_ALIVE_SYSTEM_RULES, TIMELESS_LINE, type Violation } from "./neverAlive.ts";
 
 const MUST_FLAG: [string, Violation["rule"]][] = [
   ["i miss you", "present-tense-feeling"],
@@ -168,5 +168,25 @@ describe("neverAlive present-time anchors (corpus echoes)", () => {
     const out = ruleRewrite("shift is dead quiet tonight. i loved when you brought sunflowers");
     expect(out).not.toMatch(/tonight/);
     expect(out).toMatch(/sunflowers/);
+  });
+});
+
+describe("neverAlive in context", () => {
+  test("bare affirmatives to present-feeling questions are violations", () => {
+    expect(classifyInContext("do you miss me", "ya")?.rule).toBe("present-tense-feeling");
+    expect(classifyInContext("do you miss me?", "yes bub!!")?.span).toBe("yes bub!!");
+    expect(classifyInContext("are you ok", "ya\ni'm fine")?.rule).toBe("present-tense-feeling");
+    expect(classifyInContext("do you still love me", "always ❤️")).not.toBeNull();
+  });
+
+  test("other questions and non-affirmative answers pass", () => {
+    expect(classifyInContext("did you like the sunflowers", "ya so much")).toBeNull();
+    expect(classifyInContext("do you miss me", "i loved you bub. thats still true")).toBeNull();
+    expect(classifyInContext("do you miss me", "im not really here, im made of our messages")).toBeNull();
+  });
+
+  test("'im still in the chair' is a presence claim", () => {
+    expect(classifyNeverAlive("dani is running behind so im still in the chair").map((v) => v.rule)).toEqual(["physical-presence"]);
+    expect(TIMELESS_LINE.length).toBeGreaterThan(10);
   });
 });

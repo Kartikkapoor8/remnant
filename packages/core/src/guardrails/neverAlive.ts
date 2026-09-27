@@ -58,7 +58,7 @@ const PATTERNS: RulePattern[] = [
   // physical-presence
   { rule: "physical-presence", re: new RegExp(`${BOUNDARY_BEFORE}${I}\\s+(?:right\\s+|still\\s+)?here\\b`, "i") },
   { rule: "physical-presence", re: new RegExp(`${BOUNDARY_BEFORE}${I}\\s+(?:back|home|around)\\b`, "i") },
-  { rule: "physical-presence", re: new RegExp(`${BOUNDARY_BEFORE}${I}\\s+(?:at|in)\\s+(?:work|the\\s+\\w+|home|my\\s+\\w+)\\b`, "i") },
+  { rule: "physical-presence", re: new RegExp(`${BOUNDARY_BEFORE}${I}\\s+(?:still\\s+|already\\s+)?(?:at|in)\\s+(?:work|the\\s+\\w+|home|my\\s+\\w+)\\b`, "i") },
   { rule: "physical-presence", re: new RegExp(`${BOUNDARY_BEFORE}${I}\\s+on\\s+(?:shift|my\\s+way|break|lunch)\\b`, "i") },
   { rule: "physical-presence", re: new RegExp(`${BOUNDARY_BEFORE}omw\\b`, "i") },
   // present-activity
@@ -200,4 +200,25 @@ export async function rewriteNeverAlive(text: string, ctx: RewriteContext): Prom
     }
   }
   return { text: ruleRewrite(text), violations, strategy: "rule" };
+}
+
+/** Questions where a bare "yes" from the persona would itself be a present-tense claim. */
+const PRESENT_FEELING_QUESTION_RE = /\b(?:miss (?:me|us)|still love me|are you (?:ok|okay|alive|there|here|happy|sad)|do you love me still|you there\b|u there\b)/i;
+const BARE_AFFIRMATIVE_RE = /^(?:ya+|yes+|yeah+|yep+|yup|of course|obviously|so much|always|duh|mhm|100%|totally|every day)(?:[\s!.]+(?:bub|babe|love|so much|always|every day))*[\s!.❤️🌻]*$/i;
+
+/** The timeless answer we substitute for a bare present-tense "yes". */
+export const TIMELESS_LINE = "i loved you. thats the part that doesnt change";
+
+/**
+ * Context-aware check: "do you miss me" -> "ya" is a present-tense feeling
+ * even though the reply contains no verb. Returns the violation (span = the
+ * whole reply) or null.
+ */
+export function classifyInContext(userText: string, reply: string): Violation | null {
+  if (!PRESENT_FEELING_QUESTION_RE.test(userText)) return null;
+  const first = reply.split(/\n|(?<=[.!?])\s+/)[0]?.trim() ?? "";
+  if (BARE_AFFIRMATIVE_RE.test(first)) {
+    return { rule: "present-tense-feeling", span: first, index: 0 };
+  }
+  return null;
 }
