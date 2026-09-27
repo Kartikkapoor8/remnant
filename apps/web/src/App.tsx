@@ -9,9 +9,11 @@ import { Intro } from "./components/Intro.tsx";
 import { Thread } from "./components/Thread.tsx";
 import { demoSlugFromLocation } from "./demoMode.ts";
 import { useConversation } from "./hooks/useConversation.ts";
+import { useVisualViewport } from "./hooks/useVisualViewport.ts";
 
 export function App() {
   const convo = useConversation(demoSlugFromLocation());
+  useVisualViewport();
   const [calling, setCalling] = useState(false);
   const [introDone, setIntroDone] = useState(false);
   const { state } = convo;
