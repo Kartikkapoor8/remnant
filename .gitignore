@@ -33,3 +33,4 @@ training/data/*.jsonl
 apps/web/dist
 *.pglite
 .remnant/
+__pycache__/
