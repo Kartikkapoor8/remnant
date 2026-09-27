@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { AppState, CallScript } from "../api.ts";
 import { api } from "../api.ts";
+import { Avatar } from "./Avatar.tsx";
 import { LiveWaveform } from "./LiveWaveform.tsx";
 import { Waveform } from "./Waveform.tsx";
 
@@ -154,6 +155,7 @@ export function CallScreen({ state, send, lastReply, onEnd, demoSlug = null }: P
       onClick={silent ? () => void playNext() : undefined}
     >
       <div className="call__top">
+        <Avatar name={state.persona.name} size={96} ring />
         <div className="call__name">{state.persona.name}</div>
         <div className="call__timer">{fmt(seconds)}</div>
       </div>
