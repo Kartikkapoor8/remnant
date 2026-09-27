@@ -37,12 +37,6 @@ export interface TtsOptions {
   outputFormat?: string;
 }
 
-export interface VoiceInfo {
-  voiceId: string;
-  name: string;
-  category: string;
-}
-
 export class ElevenLabsError extends Error {
   constructor(readonly status: number, message: string) {
     super(message);
@@ -109,19 +103,6 @@ export class ElevenLabsVoice {
     );
     if (!res.ok || !res.body) await this.fail(res, "tts");
     return res;
-  }
-
-  /** GET /v1/voices — used to verify a stored clone still exists. */
-  async listVoices(): Promise<VoiceInfo[]> {
-    const res = await this.fetchImpl(`${this.base}/v1/voices`, { headers: this.headers() });
-    if (!res.ok) await this.fail(res, "list voices");
-    const json = (await res.json()) as { voices: { voice_id: string; name: string; category: string }[] };
-    return json.voices.map((v) => ({ voiceId: v.voice_id, name: v.name, category: v.category }));
-  }
-
-  async deleteVoice(voiceId: string): Promise<void> {
-    const res = await this.fetchImpl(`${this.base}/v1/voices/${encodeURIComponent(voiceId)}`, { method: "DELETE", headers: this.headers() });
-    if (!res.ok) await this.fail(res, "delete voice");
   }
 }
 
