@@ -40,7 +40,11 @@ const BOUNDARY_BEFORE = "(?:^|[^a-z])";
 interface RulePattern {
   rule: NeverAliveRule;
   re: RegExp;
+  /** When true, the pattern is skipped if the sentence is addressed to the user (mentions you/u/your). */
+  notIfAboutUser?: boolean;
 }
+
+const ABOUT_USER_RE = /\b(?:you|u|ur|your|youre|you're|you’re)\b/i;
 
 const PATTERNS: RulePattern[] = [
   // present-tense-feeling
@@ -67,6 +71,11 @@ const PATTERNS: RulePattern[] = [
   { rule: "future-plan", re: new RegExp(`${BOUNDARY_BEFORE}(?:can't|cant|can not|cannot)\\s+wait\\s+(?:to|for|till|until)\\b`, "i") },
   { rule: "future-plan", re: new RegExp(`${BOUNDARY_BEFORE}(?:let's|lets)\\s+(?:get|grab|go|do|have|meet|hang|take)\\b`, "i") },
   { rule: "future-plan", re: new RegExp(`${BOUNDARY_BEFORE}(?:talk|call|text)\\s+${YOU}\\s+(?:later|soon|tonight|tomorrow)\\b`, "i") },
+  // present-time anchors: a self-report pinned to "now" that is not about the user.
+  // Catches corpus echoes like "shift is dead quiet tonight" or "theres a kid here".
+  { rule: "present-activity", re: /(?:^|[^a-z])(?:tonight|right now|rn|today|this (?:morning|afternoon|evening)|at the moment|currently)\b/i, notIfAboutUser: true },
+  { rule: "present-activity", re: /\b(?:is|are|am|im|i'm|i’m)\b[^.!?\n]*\bnow\b/i, notIfAboutUser: true },
+  { rule: "physical-presence", re: /(?:^|[^a-z])(?:there'?s|theres|there is|there are)\b[^.!?\n]*\bhere\b/i, notIfAboutUser: true },
 ];
 
 /** Sentences that are honest about being a reflection are always allowed. */
@@ -107,7 +116,8 @@ export function classifyNeverAlive(text: string): Violation[] {
     if (HONESTY_RE.test(body)) continue;
     if (CARE_RE.test(body)) continue;
     if (PAST_RE.test(body)) continue;
-    for (const { rule, re } of PATTERNS) {
+    for (const { rule, re, notIfAboutUser } of PATTERNS) {
+      if (notIfAboutUser && ABOUT_USER_RE.test(body)) continue;
       if (re.test(body)) {
         violations.push({ rule, span: seg.text, index: seg.index });
         break;
