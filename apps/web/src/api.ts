@@ -1,4 +1,4 @@
-import type { EngineResult, MemoryHit, Message, PersonaProfile } from "@remnant/core";
+import type { DemoScript, EngineResult, MemoryHit, Message, PersonaProfile } from "@remnant/core";
 
 export interface AppState {
   persona: PersonaProfile;
@@ -13,7 +13,7 @@ export interface AppState {
 }
 
 export type ChatResult = EngineResult;
-export type { MemoryHit, Message };
+export type { DemoScript, MemoryHit, Message };
 
 async function expectOk<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -33,5 +33,6 @@ export const api = {
     fetch("/api/consent", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ grantedBy, statement }) }).then((r) =>
       expectOk<{ ok: true }>(r),
     ),
+  demo: (slug: string) => fetch(`/api/demo/${slug}`).then((r) => expectOk<DemoScript>(r)),
   ttsUrl: "/api/voice/tts",
 };

@@ -1,0 +1,25 @@
+{
+  "persona": "sarah",
+  "note": "Deterministic script for filming. Live mode is the product; this replaces only the model call. Bursts must pass neverAlive and the StyleEnforcer invariants (see packages/core/src/demo.test.ts).",
+  "steps": [
+    {
+      "user": "hey",
+      "waitMs": 2000,
+      "typingMs": 2500,
+      "gapMs": 900,
+      "bursts": ["hey you", "you had the hackathon today", "how'd it go"]
+    },
+    {
+      "user": "how are you texting me",
+      "waitMs": 1500,
+      "typingMs": 2000,
+      "gapMs": 900,
+      "bursts": ["idk bub", "im made of the old messages", "the ones you kept"]
+    },
+    {
+      "user": "i want to hear you. not this",
+      "waitMs": 1000,
+      "action": "pulse-call"
+    }
+  ]
+}

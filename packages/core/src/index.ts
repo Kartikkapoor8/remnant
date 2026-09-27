@@ -7,3 +7,4 @@ export * from "./guardrails/index.ts";
 export * from "./providers/index.ts";
 export * from "./persona/index.ts";
 export { loadSarahFixture, SARAH_FIXTURE_DIR } from "./fixtures.ts";
+export { loadDemoScript, validateDemoScript, isReplyStep, type DemoScript, type DemoStep, type DemoReplyStep, type DemoActionStep } from "./demo.ts";

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, type AppState, type ChatResult, type Message } from "../api.ts";
+import { isReplyStep } from "@remnant/core";
+import { api, type AppState, type ChatResult, type DemoScript, type Message } from "../api.ts";
 
 export interface ThreadItem extends Message {
   id: string;
@@ -20,6 +21,10 @@ export interface Conversation {
   crisis: CrisisCardData | null;
   blocked: string | null;
   lastReply: string | null;
+  /** Non-null when a scripted demo is driving replies instead of the model. */
+  demo: DemoScript | null;
+  /** True after a scripted step asks the call button to pulse. */
+  callPulse: boolean;
   send: (text: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -30,8 +35,13 @@ function newSessionId(): string {
   return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/** Owns the thread: real history first, then user turns and persona bursts arriving one at a time. */
-export function useConversation(): Conversation {
+/**
+ * Owns the thread: real history first, then user turns and persona bursts
+ * arriving one at a time. With `demoSlug` set, replies come from the persona's
+ * scripted demo (fixtures/<slug>/demo-script.json) instead of /api/chat; the
+ * user still types every line by hand.
+ */
+export function useConversation(demoSlug: string | null = null): Conversation {
   const [state, setState] = useState<AppState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<ThreadItem[]>([]);
@@ -39,7 +49,10 @@ export function useConversation(): Conversation {
   const [crisis, setCrisis] = useState<CrisisCardData | null>(null);
   const [blocked, setBlocked] = useState<string | null>(null);
   const [lastReply, setLastReply] = useState<string | null>(null);
+  const [demo, setDemo] = useState<DemoScript | null>(null);
+  const [callPulse, setCallPulse] = useState(false);
   const sessionId = useRef(newSessionId());
+  const demoStep = useRef(0);
 
   const refresh = useCallback(async () => {
     try {
@@ -56,46 +69,86 @@ export function useConversation(): Conversation {
     void refresh();
   }, [refresh]);
 
-  const send = useCallback(async (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    const now = new Date().toISOString();
-    setItems((prev) => [...prev, { id: `u-${Date.now()}`, sender: "me", text: trimmed, timestamp: now }]);
-    setCrisis(null);
-    setBlocked(null);
-    let result: ChatResult;
-    try {
-      setTyping(true);
-      result = await api.chat(sessionId.current, trimmed);
-    } catch (e) {
-      setTyping(false);
-      setError(e instanceof Error ? e.message : String(e));
-      return;
-    }
-    if (result.kind === "crisis") {
-      setTyping(false);
-      setCrisis({ message: result.message, resources: result.resources });
-      return;
-    }
-    if (result.kind === "blocked") {
-      setTyping(false);
-      setBlocked(result.reason);
-      return;
-    }
-    const memories = result.memoriesUsed.map((m) => m.source);
-    for (let i = 0; i < result.bursts.length; i++) {
-      setTyping(true);
-      await sleep(result.delaysMs[i] ?? 800);
-      setTyping(false);
-      const burst = result.bursts[i]!;
-      setItems((prev) => [
-        ...prev,
-        { id: `p-${Date.now()}-${i}`, sender: "them", text: burst, timestamp: new Date().toISOString(), memories: i === 0 ? memories : undefined },
-      ]);
-      if (i < result.bursts.length - 1) await sleep(250);
-    }
-    setLastReply(result.bursts.join(". "));
+  useEffect(() => {
+    if (!demoSlug) return;
+    api
+      .demo(demoSlug)
+      .then(setDemo)
+      .catch((e) => setError(`demo script: ${e instanceof Error ? e.message : String(e)}`));
+  }, [demoSlug]);
+
+  const pushPersona = useCallback((text: string, memories?: string[]) => {
+    setItems((prev) => [...prev, { id: `p-${Date.now()}-${prev.length}`, sender: "them", text, timestamp: new Date().toISOString(), memories }]);
   }, []);
 
-  return { state, error, items, typing, crisis, blocked, lastReply, send, refresh };
+  const runScripted = useCallback(
+    async (script: DemoScript) => {
+      const step = script.steps[demoStep.current];
+      demoStep.current += 1;
+      if (!step) return;
+      await sleep(step.waitMs);
+      if (!isReplyStep(step)) {
+        if (step.action === "pulse-call") setCallPulse(true);
+        return;
+      }
+      setTyping(true);
+      await sleep(step.typingMs);
+      for (let i = 0; i < step.bursts.length; i++) {
+        if (i > 0) {
+          setTyping(true);
+          await sleep(step.gapMs);
+        }
+        setTyping(false);
+        pushPersona(step.bursts[i]!);
+      }
+      setLastReply(step.bursts.join(". "));
+    },
+    [pushPersona],
+  );
+
+  const send = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      const now = new Date().toISOString();
+      setItems((prev) => [...prev, { id: `u-${Date.now()}`, sender: "me", text: trimmed, timestamp: now }]);
+      setCrisis(null);
+      setBlocked(null);
+      if (demo) {
+        await runScripted(demo);
+        return;
+      }
+      let result: ChatResult;
+      try {
+        setTyping(true);
+        result = await api.chat(sessionId.current, trimmed);
+      } catch (e) {
+        setTyping(false);
+        setError(e instanceof Error ? e.message : String(e));
+        return;
+      }
+      if (result.kind === "crisis") {
+        setTyping(false);
+        setCrisis({ message: result.message, resources: result.resources });
+        return;
+      }
+      if (result.kind === "blocked") {
+        setTyping(false);
+        setBlocked(result.reason);
+        return;
+      }
+      const memories = result.memoriesUsed.map((m) => m.source);
+      for (let i = 0; i < result.bursts.length; i++) {
+        setTyping(true);
+        await sleep(result.delaysMs[i] ?? 800);
+        setTyping(false);
+        pushPersona(result.bursts[i]!, i === 0 ? memories : undefined);
+        if (i < result.bursts.length - 1) await sleep(250);
+      }
+      setLastReply(result.bursts.join(". "));
+    },
+    [demo, runScripted, pushPersona],
+  );
+
+  return { state, error, items, typing, crisis, blocked, lastReply, demo, callPulse, send, refresh };
 }

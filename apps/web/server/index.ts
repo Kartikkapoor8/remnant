@@ -1,4 +1,4 @@
-import { checkConsent, createAttestation, createSession, type ConversationSession } from "@remnant/core";
+import { checkConsent, createAttestation, createSession, loadDemoScript, type ConversationSession } from "@remnant/core";
 import { STOCK_VOICE_ID } from "@remnant/voice";
 import { bootstrap, DATA_DIR } from "./bootstrap.ts";
 
@@ -58,6 +58,13 @@ const server = Bun.serve({
           consent: { allowed: consent.allowed, reason: consent.reason },
           voice: await voiceStatus(),
         });
+      },
+    },
+
+    "/api/demo/:slug": {
+      GET: async (req) => {
+        const script = await loadDemoScript(req.params.slug);
+        return script ? json(script) : json({ error: `no demo script for ${req.params.slug}` }, 404);
       },
     },
 
