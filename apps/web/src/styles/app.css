@@ -191,3 +191,38 @@ body {
   font-size: var(--text-md);
   font-family: inherit;
 }
+
+/* Call-button attention pulse (scripted demo step 3). */
+.header__call--pulse {
+  animation: call-pulse 1.2s ease-in-out infinite;
+  border-color: var(--color-accent);
+}
+@keyframes call-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(47, 111, 237, 0.6); }
+  50% { box-shadow: 0 0 0 10px rgba(47, 111, 237, 0); }
+}
+
+/* Waveform on the call screen. */
+.waveform {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 48px;
+}
+.waveform__bar {
+  display: block;
+  width: 4px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--color-text-muted);
+}
+.waveform--active .waveform__bar { animation: wave 1s ease-in-out infinite; background: var(--color-accent); }
+.waveform--active .waveform__bar--0, .waveform--active .waveform__bar--8 { animation-delay: 0s; }
+.waveform--active .waveform__bar--1, .waveform--active .waveform__bar--7 { animation-delay: 0.12s; }
+.waveform--active .waveform__bar--2, .waveform--active .waveform__bar--6 { animation-delay: 0.24s; }
+.waveform--active .waveform__bar--3, .waveform--active .waveform__bar--5 { animation-delay: 0.36s; }
+.waveform--active .waveform__bar--4 { animation-delay: 0.48s; }
+@keyframes wave {
+  0%, 100% { height: 6px; }
+  50% { height: 40px; }
+}

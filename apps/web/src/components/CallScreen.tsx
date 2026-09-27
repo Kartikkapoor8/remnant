@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { AppState } from "../api.ts";
 import { api } from "../api.ts";
+import { Waveform } from "./Waveform.tsx";
 
 interface Props {
   state: AppState;
@@ -9,6 +10,8 @@ interface Props {
   /** The most recent persona reply, joined; spoken when it changes. */
   lastReply: string | null;
   onEnd: () => void;
+  /** Scripted demo: no audio is fetched or played; the waveform and timer still run. */
+  silent?: boolean;
 }
 
 function fmt(seconds: number): string {
@@ -23,7 +26,7 @@ function fmt(seconds: number): string {
  * and the resulting reply is spoken with ElevenLabs TTS. Typed input is used
  * for the utterance so the demo does not depend on speech recognition.
  */
-export function CallScreen({ state, send, lastReply, onEnd }: Props) {
+export function CallScreen({ state, send, lastReply, onEnd, silent = false }: Props) {
   const [seconds, setSeconds] = useState(0);
   const [status, setStatus] = useState("connected");
   const [utterance, setUtterance] = useState("");
@@ -45,6 +48,11 @@ export function CallScreen({ state, send, lastReply, onEnd }: Props) {
   useEffect(() => {
     if (!lastReply || lastReply === spoken.current) return;
     spoken.current = lastReply;
+    if (silent) {
+      setStatus("speaking");
+      const t = setTimeout(() => setStatus("listening"), 400 + lastReply.length * 60);
+      return () => clearTimeout(t);
+    }
     let url: string | null = null;
     (async () => {
       try {
@@ -63,7 +71,7 @@ export function CallScreen({ state, send, lastReply, onEnd }: Props) {
     return () => {
       if (url) URL.revokeObjectURL(url);
     };
-  }, [lastReply]);
+  }, [lastReply, silent]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -85,6 +93,7 @@ export function CallScreen({ state, send, lastReply, onEnd }: Props) {
         <div className="call__name">{state.persona.name}</div>
         <div className="call__timer">{fmt(seconds)}</div>
       </div>
+      <Waveform active={silent || status === "speaking"} />
       <div className="call__transcript">{lastReply ?? "say something"}</div>
       <div className="call__status">
         {status} · {state.voice.label}
