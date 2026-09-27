@@ -54,9 +54,10 @@ expl() { # name ss frames
 }
 
 if [ "$STEP" = segments ] || [ "$STEP" = all ]; then
+  rm -f "$SEG"/s[0-9][0-9]_*.mp4
   black  s01_black 48 &
   couch  s02_couch_look "$COUCH_A" 4.0 72 2489 1400 369 720 &
-  screen s03_screen_dead 2.0 120 &
+  screen s03_screen_dead 2.5 96 &
   gen    s04_A0 "$A0" 1.5 24 &
   gen    s05_A1 "$A1" 1.5 24 &
   gen    s06_A2 "$A2" 2.0 24 &
@@ -65,8 +66,8 @@ if [ "$STEP" = segments ] || [ "$STEP" = all ]; then
   wait
   gen    s09_C "$CC" 0.5 72 &
   couch  s10_couch_typing "$COUCH_B" 39.5 72 2489 1400 1351 700 &
-  screen s11_screen_bursts1 12.5 192 &
-  screen s12_screen_bursts2 28.5 216 &
+  screen s11_screen_bursts1 13.5 168 &
+  screen s12_screen_bursts2 29.0 204 &
   screen s13_screen_hear 62.5 48 &
   couch  s14_couch_calltap "$COUCH_B" 49.0 48 2489 1400 1351 700 &
   wait
@@ -74,10 +75,10 @@ if [ "$STEP" = segments ] || [ "$STEP" = all ]; then
   screen s16_screen_call1 85.0 240 &
   couch  s17_couch_call2 "$COUCH_B" 56.0 72 2489 1400 1351 700 &
   screen s18_screen_call2 98.0 288 &
-  couch  s19_couch_lower "$COUCH_C" 6.0 120 2489 1400 0 300 "curves=m='0/0 0.5/0.34 1/0.72',vignette=a=PI/3.6" &
-  expl   s20_expl_a 0 24 &
-  expl   s21_expl_b 6 912 &
-  black  s22_black 48 &
+  couch  s19_couch_lower "$COUCH_C" 6.0 96 2489 1400 0 300 "curves=m='0/0 0.5/0.34 1/0.72',vignette=a=PI/3.6" &
+  screen s20_screen_after 126.0 144 &   # 1:11.5-1:17.5 the thread again, "2 min ago"
+  black  s21_black_hold 228 &           # 1:17.5-1:27 black, the voice carries it
+  expl   s22_expl 11.0 792 &            # explainer from its architecture scene: 1:27-2:00 (arch 1:27, guardrails 1:41, serif 1:47, wordmark 1:51, black 1:59)
   wait
   : > "$SEG/list.txt"
   for f in "$SEG"/s[0-9][0-9]_*.mp4; do echo "file '$f'" >> "$SEG/list.txt"; done
@@ -100,19 +101,22 @@ ms() { awk -v t="$1" 'BEGIN{printf "%d", t*1000}'; }
 
 if [ "$STEP" = audio ] || [ "$STEP" = all ]; then
   : > "$AUD/times.txt"
-  # VO in-times (s) and slot maxima. Explainer starts at 75.0: architecture 81, guardrails 95, serif 101, wordmark 105.
-  T_VO1=3.0; T_VO2=25.2; T_VO3=38.0; T_VO4=72.0; T_VO7=105.5
-  fitvo vo1 "$(pick vo1)" 7.0; fitvo vo2 "$(pick vo2)" 3.8; fitvo vo3 "$(pick vo3)" 5.0; fitvo vo4 "$(pick vo4)" 9.0
-  fitvo vo5 "$(pick vo5)" 14.0; fitvo vo6 "$(pick vo6)" 6.0; fitvo vo7 "$(pick vo7)" 7.5
-  VO1=$AUD/fit_vo1.wav; VO2=$AUD/fit_vo2.wav; VO3=$AUD/fit_vo3.wav; VO4=$AUD/fit_vo4.wav; VO5=$AUD/fit_vo5.wav; VO6=$AUD/fit_vo6.wav; VO7=$AUD/fit_vo7.wav
-  D4=$(dur "$VO4"); D5=$(dur "$VO5"); D6=$(dur "$VO6"); D7=$(dur "$VO7")
-  T_VO5=$(awk -v a="$T_VO4" -v d="$D4" 'BEGIN{t=a+d+0.3; if(t<81.0)t=81.0; printf "%.2f", t}')
-  T_VO6=$(awk -v a="$T_VO5" -v d="$D5" 'BEGIN{t=a+d+0.2; if(t<95.0)t=95.0; printf "%.2f", t}')
+  # No VO inside the film. The voice starts when the story ends (1:08.5, the phone lowering) and each part lands on its cue:
+  # A = story + "Remnant takes..." over lowering / thread / black, must end before the architecture scene at 1:27
+  # B = GBrain line on the columns 1:27-1:41, C = guardrails line on the log 1:41-1:47, silence on the serif line 1:47-1:51, D = close on the wordmark 1:51-1:59
+  TOTAL=120.0
+  T_VOA=67.5; T_VOB=87.2; T_VOC=101.2; T_VOD=111.5
+  own() { [ -s "$AUD/own_$1.wav" ] && echo "$AUD/own_$1.wav" || echo "$RAW/$2"; }   # save your own read as video/out/audio/own_voA.wav etc.
+  fitvo voA "$(own voA voAv3.mp3)" 20.0; fitvo voB "$(own voB vo5v3.mp3)" 13.0; fitvo voC "$(own voC vo6v3.mp3)" 5.8; fitvo voD "$(own voD vo7v3.mp3)" 7.5
+  VOA=$AUD/fit_voA.wav; VOB=$AUD/fit_voB.wav; VOC=$AUD/fit_voC.wav; VOD=$AUD/fit_voD.wav
+  DA=$(dur "$VOA"); DB=$(dur "$VOB")
+  T_VOB=$(awk -v a="$T_VOA" -v d="$DA" -v b="$T_VOB" 'BEGIN{t=a+d+0.4; if(t<b)t=b; printf "%.2f", t}')
+  T_VOC=$(awk -v a="$T_VOB" -v d="$DB" -v b="$T_VOC" 'BEGIN{t=a+d+0.3; if(t<b)t=b; printf "%.2f", t}')
   ME1=$(pickme me1); ME2=$(pickme me2); ME3=$(pickme me3)
   echo "me lines: $ME1 | $ME2 | $ME3" | tee -a "$AUD/times.txt"
-  # call lines (s)
-  T_ME1=43.0; T_S1=46.0; T_ME2=48.1; T_S2=50.7; T_S3=52.9; T_ME3=56.3; T_S4=57.2; T_S5=60.6; T_S6=66.5
-  echo "VO times: 1=$T_VO1 2=$T_VO2 3=$T_VO3 4=$T_VO4 5=$T_VO5 6=$T_VO6 7=$T_VO7 (d4=$D4 d5=$D5 d6=$D6 d7=$D7)" | tee "$AUD/times.txt"
+  # call lines (s); the film's waits were trimmed by 2.5 s so the call starts at 0:40.5
+  T_ME1=40.5; T_S1=43.5; T_ME2=45.6; T_S2=48.2; T_S3=50.4; T_ME3=53.8; T_S4=54.7; T_S5=58.1; T_S6=64.0
+  echo "VO times: A=$T_VOA (${DA}s) B=$T_VOB (${DB}s) C=$T_VOC D=$T_VOD" | tee -a "$AUD/times.txt"
   echo "call: me1=$T_ME1 s1=$T_S1 me2=$T_ME2 s2=$T_S2 s3=$T_S3 me3=$T_ME3 s4=$T_S4 s5=$T_S5 s6=$T_S6" | tee -a "$AUD/times.txt"
 
   sarah() { # idx file at  -> filter chain label
@@ -126,7 +130,7 @@ if [ "$STEP" = audio ] || [ "$STEP" = all ]; then
   I=( "$RAW/s1.mp3" "$RAW/s2.mp3" "$RAW/s3.mp3" "$RAW/s4.mp3" "$RAW/s5.mp3" "$RAW/s6.mp3" \
       "$ME1" "$ME2" "$ME3" \
       "$RAW/sfx_rain.mp3" "$RAW/sfx_horn.mp3" "$RAW/sfx_thud.mp3" "$RAW/sfx_room.mp3" "$RAW/sfx_hiss.mp3" \
-      "$VO1" "$VO2" "$VO3" "$VO4" "$VO5" "$VO6" "$VO7" )
+      "$VOA" "$VOB" "$VOC" "$VOD" )
   ARGS=()
   for i in "${!I[@]}"; do
     case $i in 12) ARGS+=( -stream_loop 3 -i "${I[$i]}" );; 13) ARGS+=( -stream_loop 1 -i "${I[$i]}" );; *) ARGS+=( -i "${I[$i]}" );; esac
@@ -140,21 +144,18 @@ $(sarah 5 "$RAW/s6.mp3" $T_S6)[s6];
 $(plain 6 $T_ME1 -1dB)[m1];
 $(plain 7 $T_ME2 -1dB)[m2];
 $(plain 8 $T_ME3 -1dB)[m3];
-[9:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=3.0:7.0,asetpts=PTS-STARTPTS,volume=-9dB,adelay=10000|10000[rain];
-[10:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=2.0:2.8,asetpts=PTS-STARTPTS,afade=t=in:d=0.6,volume=-5dB,adelay=13200|13200[horn];
-[11:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:1.0,asetpts=PTS-STARTPTS,afade=t=out:st=0.6:d=0.4,volume=-3dB,adelay=14000|14000[thud];
-[12:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:57.0,asetpts=PTS-STARTPTS,afade=t=in:d=0.4,afade=t=out:st=55.5:d=1.5,volume=-30dB,adelay=18000|18000[room];
-[13:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:28.0,asetpts=PTS-STARTPTS,afade=t=in:d=0.15,afade=t=out:st=27.5:d=0.5,volume=-28dB,adelay=42000|42000[hiss];
-sine=f=4000:d=3.0,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=in:d=2.8,volume=-38dB,adelay=15000|15000[tone];
-$(plain 14 $T_VO1 0dB)[v1];
-$(plain 15 $T_VO2 0dB)[v2];
-$(plain 16 $T_VO3 0dB)[v3];
-$(plain 17 $T_VO4 0dB)[v4];
-$(plain 18 $T_VO5 0dB)[v5];
-$(plain 19 $T_VO6 0dB)[v6];
-$(plain 20 $T_VO7 0dB)[v7];
-[s1][s2][s3][s4][s5][s6][m1][m2][m3][rain][horn][thud][room][hiss][tone]amix=inputs=15:normalize=0:dropout_transition=0,atrim=0:116.0,apad=whole_dur=116.0[bed];
-[v1][v2][v3][v4][v5][v6][v7]amix=inputs=7:normalize=0:dropout_transition=0,atrim=0:116.0,apad=whole_dur=116.0[vo];
+[9:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=3.0:7.0,asetpts=PTS-STARTPTS,volume=-9dB,adelay=9000|9000[rain];
+[10:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=2.0:2.8,asetpts=PTS-STARTPTS,afade=t=in:d=0.6,volume=-5dB,adelay=12200|12200[horn];
+[11:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:1.0,asetpts=PTS-STARTPTS,afade=t=out:st=0.6:d=0.4,volume=-3dB,adelay=13000|13000[thud];
+[12:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:70.0,asetpts=PTS-STARTPTS,afade=t=in:d=0.4,afade=t=out:st=68.0:d=2.0,volume=-30dB,adelay=17000|17000[room];
+[13:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:28.0,asetpts=PTS-STARTPTS,afade=t=in:d=0.15,afade=t=out:st=27.5:d=0.5,volume=-28dB,adelay=39500|39500[hiss];
+sine=f=4000:d=3.0,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=in:d=2.8,volume=-38dB,adelay=14000|14000[tone];
+$(plain 14 $T_VOA 0dB)[v1];
+$(plain 15 $T_VOB 0dB)[v2];
+$(plain 16 $T_VOC 0dB)[v3];
+$(plain 17 $T_VOD 0dB)[v4];
+[s1][s2][s3][s4][s5][s6][m1][m2][m3][rain][horn][thud][room][hiss][tone]amix=inputs=15:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL[bed];
+[v1][v2][v3][v4]amix=inputs=4:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL[vo];
 [bed]asplit[bedA][bedB];
 [bedA][vo]amix=inputs=2:normalize=0:dropout_transition=0[scratch]"
   "$FFMPEG" -v error -y "${ARGS[@]}" -filter_complex "$FC" -map "[scratch]" -c:a pcm_s24le "$AUD/mix_scratch_raw.wav" -map "[bedB]" -c:a pcm_s24le "$AUD/mix_novo_raw.wav" || { echo "AUDIO MIX FAILED"; exit 1; }
@@ -169,8 +170,8 @@ fi
 
 if [ "$STEP" = mux ] || [ "$STEP" = all ]; then
   # one delivery encode of the picture (high bitrate but capped), then mux with stream copy
-  if [ ! -s "$OUT/video_only.mp4" ]; then "$FFMPEG" -v error -y -f concat -safe 0 -i "$SEG/list.txt" -c copy "$OUT/video_only.mp4"; fi
-  if [ ! -s "$OUT/video_delivery.mp4" ]; then
+  if [ ! -s "$OUT/video_only.mp4" ] || [ "$SEG/list.txt" -nt "$OUT/video_only.mp4" ]; then "$FFMPEG" -v error -y -f concat -safe 0 -i "$SEG/list.txt" -c copy "$OUT/video_only.mp4"; fi
+  if [ ! -s "$OUT/video_delivery.mp4" ] || [ "$OUT/video_only.mp4" -nt "$OUT/video_delivery.mp4" ]; then
     "$FFMPEG" -v error -y -i "$OUT/video_only.mp4" -c:v libx264 -preset medium -crf 17 -maxrate 18M -bufsize 36M -pix_fmt yuv420p -g 48 -colorspace bt709 -color_primaries bt709 -color_trc bt709 -an "$OUT/video_delivery.mp4"
   fi
   # final = picture + scratch mix (VO included); novo = picture + bed only
