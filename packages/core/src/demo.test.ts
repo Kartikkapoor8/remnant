@@ -50,3 +50,20 @@ describe("Sarah demo script", () => {
     expect(() => validateDemoScript({ persona: "x", steps: [{ user: "hi", waitMs: 1, action: "dance" }] })).toThrow(/action/);
   });
 });
+
+describe("Sarah call script", () => {
+  test("six lines, every spoken line passes neverAlive", async () => {
+    const { loadCallScript, stripAudioTags } = await import("./demo.ts");
+    const script = await loadCallScript("sarah");
+    expect(script).not.toBeNull();
+    expect(script!.lines.length).toBe(6);
+    expect(script!.model).toBe("eleven_v3");
+    for (const line of script!.lines) {
+      const spoken = stripAudioTags(line.text);
+      if (!spoken) continue; // a bare [breath]
+      expect(classifyNeverAlive(spoken)).toEqual([]);
+      expect(detectCrisis(spoken).crisis).toBe(false);
+    }
+    expect(stripAudioTags("[soft laugh] you said ok, bub.")).toBe("you said ok, bub.");
+  });
+});

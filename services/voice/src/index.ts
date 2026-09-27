@@ -30,6 +30,9 @@ export interface TtsOptions {
   modelId?: string;
   stability?: number;
   similarityBoost?: number;
+  /** Style exaggeration, 0-1 (v3 and v2 models). */
+  style?: number;
+  useSpeakerBoost?: boolean;
   /** e.g. mp3_44100_128 (default) or mp3_22050_32 for slower connections. */
   outputFormat?: string;
 }
@@ -98,6 +101,8 @@ export class ElevenLabsVoice {
           voice_settings: {
             stability: opts.stability ?? 0.45,
             similarity_boost: opts.similarityBoost ?? 0.8,
+            ...(opts.style !== undefined ? { style: opts.style } : {}),
+            ...(opts.useSpeakerBoost !== undefined ? { use_speaker_boost: opts.useSpeakerBoost } : {}),
           },
         }),
       },

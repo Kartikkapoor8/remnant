@@ -1,4 +1,4 @@
-import type { DemoScript, EngineResult, MemoryHit, Message, PersonaProfile } from "@remnant/core";
+import type { CallScript, DemoScript, EngineResult, MemoryHit, Message, PersonaProfile } from "@remnant/core";
 
 export interface AppState {
   persona: PersonaProfile;
@@ -9,11 +9,11 @@ export interface AppState {
   style: string;
   greeting: string | null;
   consent: { allowed: boolean; reason: string };
-  voice: { enabled: boolean; cloned: boolean; voiceId: string | null; label: string; cloneAllowed: boolean; cloneReason: string };
+  voice: { enabled: boolean; name: string; cloned: boolean; voiceId: string | null; label: string; cloneAllowed: boolean; cloneReason: string };
 }
 
 export type ChatResult = EngineResult;
-export type { DemoScript, MemoryHit, Message };
+export type { CallScript, DemoScript, MemoryHit, Message };
 
 async function expectOk<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -34,5 +34,7 @@ export const api = {
       expectOk<{ ok: true }>(r),
     ),
   demo: (slug: string) => fetch(`/api/demo/${slug}`).then((r) => expectOk<DemoScript>(r)),
+  callScript: (slug: string) => fetch(`/api/demo/${slug}/call-script`).then((r) => expectOk<CallScript>(r)),
+  callClipUrl: (slug: string, id: string) => `/api/demo/${slug}/call/${id}.mp3`,
   ttsUrl: "/api/voice/tts",
 };

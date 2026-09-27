@@ -25,7 +25,7 @@ export function Thread({ convo }: { convo: Conversation }) {
           </div>
         );
       })}
-      {convo.typing && <TypingIndicator />}
+      {convo.typing && <TypingIndicator cycleSeconds={convo.demo ? 1.6 : 1.2} />}
       {convo.crisis && <CrisisCard data={convo.crisis} />}
       {convo.blocked && <div className="card">{convo.blocked}</div>}
       <div ref={bottom} />

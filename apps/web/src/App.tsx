@@ -35,7 +35,7 @@ export function App() {
       <Footer state={state} />
       <AnimatePresence>
         {calling && state && (
-          <CallScreen key="call" state={state} send={convo.send} lastReply={convo.lastReply} onEnd={() => setCalling(false)} silent={convo.demo !== null} />
+          <CallScreen key="call" state={state} send={convo.send} lastReply={convo.lastReply} onEnd={() => setCalling(false)} demoSlug={convo.demo ? demoSlugFromLocation() : null} />
         )}
       </AnimatePresence>
     </div>
