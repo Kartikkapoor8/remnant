@@ -1,34 +1,20 @@
 /**
- * Import brain/ markdown into the GBrain brain the app uses, then write each
- * Compiled Truth sentence and Timeline entry into GBrain's fact store through
- * the `remember` verb (with provenance), so `recall` can rank them by entity.
- *
- * PGLite is single-writer, so this must run while no other `gbrain serve`
- * holds the lock (stop the app server first).
+ * Import brain/ into the GBrain brain the app uses and seed its fact store.
+ * `bun run sarah` does this as its last step; this is the standalone form.
  *
  *   bun run brain:import                                  # ~/.gbrain
- *   REMNANT_GBRAIN_HOME=.remnant bun run brain:import     # project-local brain
+ *   REMNANT_GBRAIN_HOME=~/.remnant-dev bun run brain:import
  */
-import { resolve } from "node:path";
-import { GBrainMemoryStore, parseBrainFacts, seedBrainFacts } from "@remnant/core";
+import { BRAIN_DIR, brainHome, ensureBrain, gbrainInstalled, importBrain } from "./lib/brain.ts";
 
-const home = process.env.REMNANT_GBRAIN_HOME ? resolve(process.env.REMNANT_GBRAIN_HOME) : process.env.HOME!;
-const brainDir = resolve(import.meta.dir, "../brain");
-
-const proc = Bun.spawn(["gbrain", "import", brainDir, "--no-embed"], {
-  env: { ...process.env, GBRAIN_HOME: home },
-  stdout: "inherit",
-  stderr: "inherit",
-});
-const code = await proc.exited;
-if (code !== 0) {
-  console.error(`gbrain import exited ${code}. If it says the database is already open through gbrain serve, stop that process first.`);
-  process.exit(code);
+if (!gbrainInstalled()) {
+  console.error("gbrain is not on PATH: bun add -g gbrain");
+  process.exit(1);
 }
-
-const facts = await parseBrainFacts(brainDir);
-const store = new GBrainMemoryStore({ home, timeoutMs: 30_000 });
-await store.connect();
-const report = await seedBrainFacts(store, facts, (line) => console.error(line));
-await store.close();
-console.log(`pages imported from ${brainDir}; facts: ${facts.length} parsed, ${report.inserted} inserted, ${report.duplicate} already present, ${report.failed} failed -> ${home}/.gbrain`);
+const home = brainHome();
+const state = await ensureBrain(home);
+const report = await importBrain(home);
+console.log(
+  `${home}/.gbrain (${state}): ${report.pages} pages imported from ${BRAIN_DIR}; facts: ${report.facts} parsed, ${report.seed.inserted} inserted, ${report.seed.duplicate} already present, ${report.seed.failed} failed`,
+);
+process.exit(report.seed.failed > 0 ? 1 : 0);

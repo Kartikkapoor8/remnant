@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { resolve } from "node:path";
-import { parseBrainFacts, seedBrainFacts, splitSentences } from "./brainSeed.ts";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { loadSarahFixture } from "../fixtures.ts";
+import { computeFingerprint } from "../stylometry/fingerprint.ts";
+import { auditBrain, parseBrainFacts, seedBrainFacts, splitSentences } from "./brainSeed.ts";
 import { InMemoryStore } from "./inMemory.ts";
 import { rankByOverlap } from "./store.ts";
 
@@ -44,5 +48,28 @@ describe("brain seed", () => {
     expect(ranked[0]!.id).toBe("b");
     expect(ranked[1]!.id).toBe("a");
     expect(ranked[2]!.id).toBe("c");
+  });
+
+  test("auditBrain passes on the real brain/ and flags a brain that drifted from the corpus", async () => {
+    const { profile, result } = await loadSarahFixture();
+    const fp = computeFingerprint(result.messages);
+    const audit = await auditBrain(BRAIN, { entity: `people/${profile.slug}`, lastMessage: result.messages.at(-1)!.text, greeting: fp.greetings[0] ?? null });
+    expect(audit.problems).toEqual([]);
+    expect(audit.pages.length).toBe(9);
+    expect(audit.facts.length).toBe((await parseBrainFacts(BRAIN)).length);
+
+    const dir = mkdtempSync(join(tmpdir(), "remnant-brain-"));
+    mkdirSync(join(dir, "people"));
+    mkdirSync(join(dir, "memories", "sarah"), { recursive: true });
+    writeFileSync(join(dir, "people", "sarah.md"), "---\ntitle: Sarah\n---\n# Sarah\n\nA page with no sections.\n");
+    writeFileSync(join(dir, "memories", "sarah", "drives.md"), "---\ntitle: Drives\n---\n## Compiled Truth\n\nShe drove the frog to the overlook most weeks.\n");
+    const bad = await auditBrain(dir, { entity: "people/sarah", lastMessage: "love you, going on a drive", greeting: "hi hi" });
+    expect(bad.problems).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('brain/people/sarah.md: no "## Compiled Truth"'),
+        expect.stringContaining("does not quote the corpus's last message"),
+        expect.stringContaining('brain/memories/sarah/drives.md: entity is "(none)"'),
+      ]),
+    );
   });
 });

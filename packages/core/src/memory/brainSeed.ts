@@ -82,3 +82,54 @@ export async function seedBrainFacts(store: MemoryStore, facts: BrainFact[], log
   }
   return report;
 }
+
+export interface BrainAuditOptions {
+  /** Entity every memory page must belong to, e.g. "people/sarah". */
+  entity: string;
+  /** The corpus's real last message; the person page must quote it. */
+  lastMessage: string;
+  /** The corpus-derived opener; the style page must mention it. */
+  greeting: string | null;
+}
+
+export interface BrainAudit {
+  pages: string[];
+  facts: BrainFact[];
+  problems: string[];
+}
+
+/**
+ * Checks brain/ against the corpus it is supposed to describe, so the hand
+ * written pages cannot drift from the fixture without a test noticing:
+ * every page has a Compiled Truth section that yields facts, every page in
+ * memories/ belongs to the persona entity, the person page quotes the real
+ * last message, and the style page names the measured greeting.
+ */
+export async function auditBrain(brainDir: string, opts: BrainAuditOptions): Promise<BrainAudit> {
+  const glob = new Bun.Glob("**/*.md");
+  const pages: string[] = [];
+  for await (const rel of glob.scan(brainDir)) pages.push(rel);
+  pages.sort();
+  const facts = await parseBrainFacts(brainDir);
+  const problems: string[] = [];
+  const personSlug = opts.entity.split("/").pop() ?? opts.entity;
+  for (const rel of pages) {
+    const text = await Bun.file(resolve(brainDir, rel)).text();
+    const provenance = `brain/${rel}`;
+    if (!/^## Compiled Truth/m.test(text)) problems.push(`${provenance}: no "## Compiled Truth" section`);
+    else if (!facts.some((f) => f.provenance === provenance && f.kind === "fact")) problems.push(`${provenance}: Compiled Truth yields no facts`);
+    const slug = rel.replace(/\.md$/, "");
+    if (slug.startsWith(`memories/${personSlug}/`)) {
+      const entity = frontmatter(text).entity;
+      if (entity !== opts.entity) problems.push(`${provenance}: entity is "${entity ?? "(none)"}", expected "${opts.entity}"`);
+    }
+    if (slug === opts.entity && opts.lastMessage && !text.includes(opts.lastMessage)) {
+      problems.push(`${provenance}: does not quote the corpus's last message "${opts.lastMessage}"`);
+    }
+    if (slug === `memories/${personSlug}/how-she-texted` && opts.greeting && !text.includes(`"${opts.greeting}"`)) {
+      problems.push(`${provenance}: does not mention the measured greeting "${opts.greeting}"`);
+    }
+  }
+  if (!pages.includes(`${opts.entity}.md`)) problems.push(`no page for ${opts.entity}`);
+  return { pages, facts, problems };
+}

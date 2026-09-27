@@ -2,8 +2,14 @@
   "name": "remnant",
   "private": true,
   "type": "module",
-  "workspaces": ["apps/*", "packages/*", "services/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
   "scripts": {
+    "demo": "bun run scripts/demo.ts",
+    "sarah": "bun run scripts/sarah.ts",
     "dev": "bun run --filter @remnant/web dev",
     "server": "bun run --filter @remnant/web server",
     "test": "bun test",
