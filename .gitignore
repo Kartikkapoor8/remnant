@@ -28,7 +28,12 @@ node_modules
 out
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # remnant
-training/runs/
+training/runs/*
+!training/runs/latest.json
+!training/runs/20260927T212125Z/
+training/runs/20260927T212125Z/*
+!training/runs/20260927T212125Z/manifest.json
+!training/runs/20260927T212125Z/log.jsonl
 training/data/*.jsonl
 apps/web/dist
 *.pglite

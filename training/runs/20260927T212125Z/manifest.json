@@ -1,0 +1,8 @@
+{
+  "base_model": "Qwen/Qwen3.8-27B-FP8",
+  "checkpoint": "river://1e36c155-9c45-4031-a2de-8dd8281c8971/sampler_weights/sarah-lora",
+  "step": 36,
+  "final_loss": 0.7534187861851284,
+  "finished_at": "2026-09-27T21:26:04.986799+00:00",
+  "examples": 95
+}
