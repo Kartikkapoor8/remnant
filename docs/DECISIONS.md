@@ -1,0 +1,15 @@
+# Decisions
+
+Chronological log of decisions made without asking. Newest at the bottom.
+
+## 2026-09-27
+
+1. **Vite over Bun HTML imports.** The bun-init CLAUDE.md said "don't use vite"; the brief says Vite + React + TypeScript. The brief wins. Vite gives `--host` for the phone and proxies `/api` to the Bun server, so one URL works on the iPhone.
+2. **Stray nested `remnant/.git` removed.** It was an empty accidental `git init` inside the repo. Also removed the `index.ts` hello-world.
+3. **The fixture is a real WhatsApp export.** `fixtures/sarah/sarah.whatsapp.txt` is parsed by the real WhatsApp adapter at load time, so the demo path exercises an import adapter instead of bypassing it.
+4. **Persona's "first message" is its first reply.** The brief asks both for a corpus-derived first message and for `noInitiate`. Resolution: the thread opens on the REAL history ending in Sarah's last real text, 8 months ago. The persona says nothing until the user texts. Its first reply then opens with her corpus-derived greeting (the stylometry `greetings` field, "hi hi"). A reply is not an initiation.
+5. **GBrain lock and `GBRAIN_HOME`.** PGLite is single-writer and `gbrain serve` refuses to start while another live serve holds the lock. A `gbrain serve` MCP child of the Claude Code session was still holding `~/.gbrain` (the `~/.claude.json` entry under project `/Users/kartik` was not actually removed), and the permission classifier blocked killing it or editing that file. gbrain honors `GBRAIN_HOME` as the parent of `.gbrain/`, so the server sets `GBRAIN_HOME` from `REMNANT_GBRAIN_HOME` (default: the user's home, i.e. `~/.gbrain` as the brief asks; during dev: `.remnant/` inside the repo, gitignored). If the child exits with a live-serve lock error the server logs the exact fix.
+6. **`gbrain import` runs from the server, not a Claude MCP.** `bun run brain:import` runs `gbrain import brain/ --no-embed` before the server spawns `gbrain serve`, because both need the PGLite lock and only one process may hold it.
+7. **Consent store is a JSON file** under `.remnant/consent.json`, not a database. It is one record for the demo and must survive restarts; a file is the honest minimum.
+8. **Model provider order:** River adapter (if `training/runs/latest.json` has a checkpoint) → Anthropic (if `ANTHROPIC_API_KEY`) → Fixture (deterministic). The active provider is shown in the UI footer so the fallback is never silent.
+9. **`synthesize` verb not used at runtime.** It runs an LLM inside gbrain; the persona prompt already reasons over retrieved facts. Using it would double the model calls and hide which memories were used.

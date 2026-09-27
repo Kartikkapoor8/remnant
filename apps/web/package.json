@@ -1,0 +1,23 @@
+{
+  "name": "@remnant/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "server": "bun --watch server/index.ts",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@remnant/core": "workspace:*",
+    "@remnant/voice": "workspace:*",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.3.1"
+  }
+}
