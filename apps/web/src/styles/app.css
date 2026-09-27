@@ -24,6 +24,10 @@ input:focus { border-color: rgba(237, 232, 223, 0.18); }
 
 /* ---------- shell ---------- */
 .app {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -54,6 +58,12 @@ input:focus { border-color: rgba(237, 232, 223, 0.18); }
 
 /* ---------- header ---------- */
 .header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  background: var(--bg);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -123,8 +133,9 @@ input:focus { border-color: rgba(237, 232, 223, 0.18); }
 /* ---------- thread ---------- */
 .thread {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: var(--space-3) calc(var(--space-4) + var(--safe-right)) var(--space-3) calc(var(--space-4) + var(--safe-left));
+  padding: calc(var(--header-h, 56px) + var(--space-3)) calc(var(--space-4) + var(--safe-right)) var(--space-3) calc(var(--space-4) + var(--safe-left));
   display: flex;
   flex-direction: column;
   -webkit-overflow-scrolling: touch;
