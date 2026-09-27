@@ -148,3 +148,25 @@ test("system rules are embeddable bullets", () => {
   expect(lines.length).toBeLessThanOrEqual(10);
   for (const l of lines) expect(l.startsWith("- ")).toBe(true);
 });
+
+describe("neverAlive present-time anchors (corpus echoes)", () => {
+  test("flags self-reports pinned to now", () => {
+    expect(classifyNeverAlive("shift is dead quiet tonight, which is nice").map((v) => v.rule)).toEqual(["present-activity"]);
+    expect(classifyNeverAlive("theres a kid here who named his iv pole gerald").map((v) => v.rule)).toEqual(["physical-presence"]);
+    expect(classifyNeverAlive("gerald and i are friends now bub").map((v) => v.rule)).toEqual(["present-activity"]);
+    expect(classifyNeverAlive("so tired today").length).toBe(1);
+  });
+
+  test("does not flag lines addressed to the user or anchored in the past", () => {
+    expect(classifyNeverAlive("you should call maya tonight")).toEqual([]);
+    expect(classifyNeverAlive("hope your day is ok today")).toEqual([]);
+    expect(classifyNeverAlive("i loved those tuesday drives")).toEqual([]);
+    expect(classifyNeverAlive("remember when biscuit ate the sock")).toEqual([]);
+  });
+
+  test("ruleRewrite drops the anchored sentence and keeps the rest", () => {
+    const out = ruleRewrite("shift is dead quiet tonight. i loved when you brought sunflowers");
+    expect(out).not.toMatch(/tonight/);
+    expect(out).toMatch(/sunflowers/);
+  });
+});
