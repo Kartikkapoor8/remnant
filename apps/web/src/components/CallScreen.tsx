@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import type { AppState, CallScript } from "../api.ts";
+import type { AppState } from "../api.ts";
 import { api } from "../api.ts";
 import { Avatar } from "./Avatar.tsx";
 import { LiveWaveform } from "./LiveWaveform.tsx";
+import { useDemoCall } from "../hooks/useDemoCall.ts";
 import { Waveform } from "./Waveform.tsx";
 
 interface Props {
@@ -49,57 +50,20 @@ export function CallScreen({ state, send, lastReply, onEnd, demoSlug = null }: P
   const [busy, setBusy] = useState(false);
   const audio = useRef<HTMLAudioElement | null>(null);
   const spoken = useRef<string | null>(null);
-  const [script, setScript] = useState<CallScript | null>(null);
-  const clipIndex = useRef(0);
-  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
-  const audioCtx = useRef<AudioContext | null>(null);
-  const source = useRef<MediaElementAudioSourceNode | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const [audioReady, setAudioReady] = useState<HTMLAudioElement | null>(null);
+  const demo = useDemoCall(demoSlug, audioReady);
 
   useEffect(() => {
     const id = setInterval(() => setSeconds((s) => s + 1), 1000);
     // Create the element inside the user's tap so iOS Safari allows playback later.
     audio.current = new Audio();
     audio.current.preload = "auto";
+    setAudioReady(audio.current);
     return () => {
       clearInterval(id);
       audio.current?.pause();
     };
   }, []);
-
-  useEffect(() => {
-    if (!demoSlug) return;
-    api.callScript(demoSlug).then(setScript).catch(() => setScript(null));
-  }, [demoSlug]);
-
-  /** Demo: play the next clip through a Web Audio graph so the waveform follows the real amplitude. */
-  const playNext = async () => {
-    if (!demoSlug || !script || playing) return;
-    const line = script.lines[clipIndex.current];
-    if (!line) return;
-    clipIndex.current += 1;
-    const el = audio.current!;
-    if (!audioCtx.current) {
-      audioCtx.current = new AudioContext();
-      const node = audioCtx.current.createAnalyser();
-      node.fftSize = 64;
-      node.smoothingTimeConstant = 0.75;
-      source.current = audioCtx.current.createMediaElementSource(el);
-      source.current.connect(node);
-      node.connect(audioCtx.current.destination);
-      setAnalyser(node);
-    }
-    if (audioCtx.current.state === "suspended") await audioCtx.current.resume();
-    el.src = api.callClipUrl(demoSlug, line.id);
-    el.onended = () => setPlaying(false);
-    el.onerror = () => setPlaying(false);
-    setPlaying(true);
-    try {
-      await el.play();
-    } catch {
-      setPlaying(false);
-    }
-  };
 
   useEffect(() => {
     if (silent || !lastReply || lastReply === spoken.current) return;
@@ -124,11 +88,6 @@ export function CallScreen({ state, send, lastReply, onEnd, demoSlug = null }: P
     };
   }, [lastReply, silent]);
 
-  useEffect(() => {
-    return () => {
-      audioCtx.current?.close().catch(() => {});
-    };
-  }, []);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -152,7 +111,7 @@ export function CallScreen({ state, send, lastReply, onEnd, demoSlug = null }: P
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: reduced ? 0.2 : 0.4 }}
-      onClick={silent ? () => void playNext() : undefined}
+      onClick={silent ? demo.forceNext : undefined}
     >
       <div className="call__top">
         <Avatar name={state.persona.name} size={96} ring />
@@ -160,7 +119,7 @@ export function CallScreen({ state, send, lastReply, onEnd, demoSlug = null }: P
         <div className="call__timer">{fmt(seconds)}</div>
       </div>
       <div className="call__middle">
-        {silent && playing && analyser ? <LiveWaveform analyser={analyser} /> : <Waveform active={!silent && status === "speaking"} />}
+        {silent && demo.analysers.length > 0 ? <LiveWaveform analysers={demo.analysers} /> : <Waveform active={!silent && status === "speaking"} />}
         <div className="call__transcript">{silent ? "" : lastReply ?? ""}</div>
         <div className="call__status">
           {voiceError ?? state.voice.name}

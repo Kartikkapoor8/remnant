@@ -58,6 +58,8 @@ describe("Sarah call script", () => {
     expect(script).not.toBeNull();
     expect(script!.lines.length).toBe(6);
     expect(script!.model).toBe("eleven_v3");
+    expect(script!.lines.map((l) => l.trigger.kind)).toEqual(["after_user", "after_user", "auto", "after_user", "auto", "auto"]);
+    expect(script!.lines[0]!.trigger.kind).toBe("after_user"); // the persona never speaks first
     for (const line of script!.lines) {
       const spoken = stripAudioTags(line.text);
       if (!spoken) continue; // a bare [breath]
