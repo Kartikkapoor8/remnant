@@ -38,7 +38,7 @@
     },
     {
       "id": "05",
-      "text": "it's sunday. [pause] tuesday i would've been at the salon... eleven o'clock. same as always.",
+      "text": "[breath] tuesday i would've been at the salon... eleven o'clock. same as always.",
       "trigger": {
         "kind": "auto",
         "delayMs": 2200
