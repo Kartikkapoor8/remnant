@@ -7,4 +7,4 @@ export * from "./guardrails/index.ts";
 export * from "./providers/index.ts";
 export * from "./persona/index.ts";
 export { loadSarahFixture, SARAH_FIXTURE_DIR } from "./fixtures.ts";
-export { loadDemoScript, validateDemoScript, isReplyStep, loadCallScript, validateCallScript, stripAudioTags, callClipPath, type DemoScript, type DemoStep, type DemoReplyStep, type DemoActionStep, type CallScript, type CallLine } from "./demo.ts";
+export { loadDemoScript, validateDemoScript, isReplyStep, loadCallScript, validateCallScript, stripAudioTags, callClipPath, type DemoScript, type DemoStep, type DemoReplyStep, type DemoActionStep, type CallScript, type CallLine, type CallTrigger, type CallTriggerKind } from "./demo.ts";

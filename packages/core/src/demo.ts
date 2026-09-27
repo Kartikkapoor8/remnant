@@ -65,9 +65,18 @@ export async function loadDemoScript(slug: string): Promise<DemoScript | null> {
 }
 
 /** One spoken line of the scripted call. Bracketed audio tags are delivery cues for ElevenLabs v3. */
+export type CallTriggerKind = "after_user" | "auto";
+
+export interface CallTrigger {
+  /** after_user: fire delayMs after the user's speech ends. auto: delayMs after the previous clip ends. */
+  kind: CallTriggerKind;
+  delayMs: number;
+}
+
 export interface CallLine {
   id: string;
   text: string;
+  trigger: CallTrigger;
 }
 
 export interface CallScript {
@@ -90,6 +99,10 @@ export function validateCallScript(input: unknown): CallScript {
   }
   s.lines.forEach((l, i) => {
     if (!/^\d{2}$/.test(String(l?.id)) || typeof l?.text !== "string" || !l.text.trim()) throw new Error(`line ${i}: two-digit id and text are required`);
+    const tr = l.trigger as Partial<CallTrigger> | undefined;
+    if (!tr || (tr.kind !== "after_user" && tr.kind !== "auto") || typeof tr.delayMs !== "number" || tr.delayMs < 0) {
+      throw new Error(`line ${i}: trigger needs kind after_user|auto and a non-negative delayMs`);
+    }
   });
   return s as CallScript;
 }

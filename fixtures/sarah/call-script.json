@@ -2,31 +2,55 @@
   "persona": "sarah",
   "voice": "sarah",
   "model": "eleven_v3",
-  "note": "Filming clips for the scripted demo call. Audio tags in brackets are ElevenLabs v3 delivery cues, not spoken. Each line must pass neverAlive (packages/core/src/demo.test.ts).",
+  "note": "Filming clips for the scripted demo call. Audio tags in brackets are ElevenLabs v3 delivery cues, not spoken. trigger.after_user plays delayMs after the user's speech ends (energy VAD on the mic); trigger.auto plays delayMs after the previous clip ends. Each line must pass neverAlive (packages/core/src/demo.test.ts).",
   "lines": [
     {
       "id": "01",
-      "text": "[quiet] ...hi."
+      "text": "[quiet] ...hi.",
+      "trigger": {
+        "kind": "after_user",
+        "delayMs": 1500
+      }
     },
     {
       "id": "02",
-      "text": "[breath] mm."
+      "text": "[breath] mm.",
+      "trigger": {
+        "kind": "after_user",
+        "delayMs": 1800
+      }
     },
     {
       "id": "03",
-      "text": "[breath] um... you had the hackathon today. [soft] how'd it actually go."
+      "text": "[breath] um... you had the hackathon today. [soft] how'd it actually go.",
+      "trigger": {
+        "kind": "auto",
+        "delayMs": 2500
+      }
     },
     {
       "id": "04",
-      "text": "[soft laugh] you said ok every time it went well, bub."
+      "text": "[soft laugh] you said ok every time it went well, bub.",
+      "trigger": {
+        "kind": "after_user",
+        "delayMs": 1200
+      }
     },
     {
       "id": "05",
-      "text": "it's sunday. [pause] tuesday i would've been at the salon... eleven o'clock. same as always."
+      "text": "it's sunday. [pause] tuesday i would've been at the salon... eleven o'clock. same as always.",
+      "trigger": {
+        "kind": "auto",
+        "delayMs": 2200
+      }
     },
     {
       "id": "06",
-      "text": "[quiet] go get some sleep. [breath] that's what i would've said."
+      "text": "[quiet] go get some sleep. [breath] that's what i would've said.",
+      "trigger": {
+        "kind": "auto",
+        "delayMs": 2600
+      }
     }
   ]
 }
