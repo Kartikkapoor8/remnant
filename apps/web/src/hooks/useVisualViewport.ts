@@ -1,15 +1,26 @@
 import { useEffect } from "react";
 
 /**
- * Keeps the app sized to the visual viewport so the composer stays pinned
- * above the iOS keyboard, and scrolls the thread to the bottom when the
- * keyboard opens. Writes --vvh on :root; CSS falls back to 100dvh without it.
+ * Keeps the header pinned and the composer above the iOS keyboard:
+ * - the app shell is position: fixed and sized to visualViewport.height (--vvh)
+ * - the header is position: fixed; the thread pads by the measured header
+ *   height (--header-h) so only the thread shrinks and scrolls
+ * - body scroll is pinned to 0 so Safari cannot push the header off-screen
+ * CSS falls back to 100dvh / 56px without the variables.
  */
 export function useVisualViewport(): void {
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
     const root = document.documentElement;
+    const header = document.querySelector<HTMLElement>(".header");
+    const ro = header
+      ? new ResizeObserver(() => root.style.setProperty("--header-h", `${Math.round(header.getBoundingClientRect().height)}px`))
+      : null;
+    if (header) {
+      root.style.setProperty("--header-h", `${Math.round(header.getBoundingClientRect().height)}px`);
+      ro?.observe(header);
+    }
     let raf = 0;
     const apply = () => {
       cancelAnimationFrame(raf);
@@ -31,6 +42,7 @@ export function useVisualViewport(): void {
     return () => {
       vv.removeEventListener("resize", apply);
       vv.removeEventListener("scroll", apply);
+      ro?.disconnect();
       cancelAnimationFrame(raf);
     };
   }, []);
