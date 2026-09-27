@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isReplyStep } from "@remnant/core";
+import type { DemoReplyStep, DemoStep } from "@remnant/core";
 import { api, type AppState, type ChatResult, type DemoScript, type Message } from "../api.ts";
+
+/** Browser-side twin of core's isReplyStep (core itself is server-only code). */
+function isReplyStep(step: DemoStep): step is DemoReplyStep {
+  return Array.isArray((step as DemoReplyStep).bursts);
+}
 
 export interface ThreadItem extends Message {
   id: string;

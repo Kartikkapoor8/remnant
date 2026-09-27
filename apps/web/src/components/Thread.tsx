@@ -17,11 +17,11 @@ export function Thread({ convo }: { convo: Conversation }) {
       {convo.items.map((item, i) => {
         const prev = convo.items[i - 1];
         const gap = needsGapLabel(prev?.timestamp, item.timestamp);
-        const first = gap || prev?.sender !== item.sender;
+        const sameSender = !gap && prev?.sender === item.sender;
         return (
-          <div key={item.id}>
+          <div key={item.id} className={sameSender ? "thread__row thread__row--tight" : "thread__row thread__row--gap"}>
             {gap && <TimeGap iso={item.timestamp} />}
-            <MessageBubble item={item} first={first} />
+            <MessageBubble item={item} arriving={!item.id.startsWith("h-")} />
           </div>
         );
       })}
