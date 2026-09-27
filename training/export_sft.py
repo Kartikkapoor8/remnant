@@ -5,6 +5,7 @@ exchanges from the same conversation as context, so the adapter learns both
 her voice and continuity. Every 10th example is held out.
 
     .venv/bin/python training/export_sft.py --stats
+    python training/export_sft.py --dry-run          # parse + build + stats, write nothing (CI)
 """
 from __future__ import annotations
 
@@ -111,22 +112,29 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--fixture", type=Path, default=FIXTURE)
     ap.add_argument("--stats", action="store_true")
+    ap.add_argument("--dry-run", action="store_true", help="build the examples and print stats without writing data/")
     args = ap.parse_args()
 
     messages = parse_whatsapp(args.fixture)
     examples = build_examples(messages)
     holdout = [e for i, e in enumerate(examples) if i % 10 == 9]
     train = [e for i, e in enumerate(examples) if i % 10 != 9]
-    write_jsonl(TRAIN_PATH, train)
-    write_jsonl(HOLDOUT_PATH, holdout)
-    if args.stats:
+    if len(examples) < MIN_EXAMPLES_BEFORE_SINGLES:
+        raise SystemExit(f"only {len(examples)} examples from {args.fixture}; expected at least {MIN_EXAMPLES_BEFORE_SINGLES}")
+    if not args.dry_run:
+        write_jsonl(TRAIN_PATH, train)
+        write_jsonl(HOLDOUT_PATH, holdout)
+    if args.stats or args.dry_run:
         them = [m for m in messages if m["sender"] == "them"]
         asst = [e["messages"][-1]["content"] for e in examples]
         ctx = sum(1 for e in examples if len(e["messages"]) > 3)
         print(f"messages parsed: {len(messages)} (sarah {len(them)}, me {len(messages) - len(them)})")
         print(f"examples: {len(examples)} -> train {len(train)}, holdout {len(holdout)}; with prior context: {ctx}")
         print(f"avg assistant chars: {sum(map(len, asst)) / max(1, len(asst)):.1f}")
-        print(f"wrote {TRAIN_PATH.relative_to(REPO_ROOT)} and {HOLDOUT_PATH.relative_to(REPO_ROOT)}")
+        if args.dry_run:
+            print("dry run: nothing written")
+        else:
+            print(f"wrote {TRAIN_PATH.relative_to(REPO_ROOT)} and {HOLDOUT_PATH.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":

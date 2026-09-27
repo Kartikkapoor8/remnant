@@ -1,5 +1,7 @@
 # Remnant
 
+[![ci](https://github.com/Kartikkapoor8/remnant/actions/workflows/ci.yml/badge.svg)](https://github.com/Kartikkapoor8/remnant/actions/workflows/ci.yml)
+
 A reflection of someone you lost, built from their own text messages, so you
 can still text or call them. It is not a resurrection and it never pretends to
 be one. Think Black Mirror's "Be Right Back", done responsibly: the persona
