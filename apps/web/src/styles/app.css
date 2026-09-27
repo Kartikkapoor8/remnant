@@ -1,7 +1,7 @@
 @import "./tokens.css";
 
 * { box-sizing: border-box; }
-html, body, #root { height: 100%; margin: 0; }
+html, body, #root { height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
 body {
   background: var(--bg);
   color: var(--text);
@@ -25,15 +25,13 @@ input:focus { border-color: rgba(237, 232, 223, 0.18); }
 /* ---------- shell ---------- */
 .app {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  height: var(--vvh, 100dvh);
+  height: 100dvh; /* overridden inline from visualViewport.height while the keyboard is open */
   background: var(--bg);
   overflow: hidden;
+  will-change: transform, height;
 }
 
 /* ---------- intro ---------- */
@@ -58,11 +56,7 @@ input:focus { border-color: rgba(237, 232, 223, 0.18); }
 
 /* ---------- header ---------- */
 .header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 5;
+  flex-shrink: 0;
   background: var(--bg);
   display: flex;
   align-items: center;
@@ -135,7 +129,7 @@ input:focus { border-color: rgba(237, 232, 223, 0.18); }
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: calc(var(--header-h, 56px) + var(--space-3)) calc(var(--space-4) + var(--safe-right)) var(--space-3) calc(var(--space-4) + var(--safe-left));
+  padding: var(--space-3) calc(var(--space-4) + var(--safe-right)) var(--space-3) calc(var(--space-4) + var(--safe-left));
   display: flex;
   flex-direction: column;
   -webkit-overflow-scrolling: touch;
@@ -228,7 +222,7 @@ input:focus { border-color: rgba(237, 232, 223, 0.18); }
   border-radius: var(--radius-input);
   height: 44px;
   padding: 0 16px;
-  font-size: var(--text-md);
+  font-size: max(16px, var(--text-md)); /* below 16px iOS zooms on focus and shifts the layout */
   line-height: 44px;
 }
 .composer__input::placeholder { color: var(--text-muted); text-transform: lowercase; }
