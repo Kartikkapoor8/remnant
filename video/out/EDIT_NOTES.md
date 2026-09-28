@@ -169,3 +169,8 @@ Edges trimmed and pauses over 0.4 s squeezed to 0.28 s (`silenceremove`), then o
 **QA.** Sheets at 1 fps: `video/out/li/qa_sheet_16x9.jpg`, `qa_sheet_4x5.jpg`. Couch shots: maximum frame-average luma 33-54 of 255 in both aspects. 0:00-0:02 digital silence. Durations and codecs as above.
 
 **Not done or worth knowing.** "Theme from Anon" is a commercial film cue; LinkedIn's audio matching may flag it. IMG_2157, IMG_2158 and the picture of IMG_2162 were not used. The "It was all right." take at 76.4 s in IMG_2162 was rejected (transcribes as "you know that").
+
+### LinkedIn cut, revision: music from the start
+
+- The theme now also plays under the cold open, the couch and the dead thread: source 4.0-17.0 s (its quiet intro) at 0:00-0:13, 1.5 s fade in, +4 dB, hard out on the thud at 0:13. It measures -23.8 LUFS under the opening, about 10 dB under the dialogue that follows. The second placement (1:06 to 1:41.5) is unchanged.
+- Found and fixed a normalization fault that affected the two previous LinkedIn renders: ffmpeg's `loudnorm` silently falls back to dynamic (levelling) mode when the source loudness range exceeds the target or the linear gain would break the true-peak ceiling. Both were true here (range 13 LU against a target of 11), which is why quiet passages had crept up toward dialogue level. Now the summed mix passes a -10.5 dBFS limiter and the range target is 20, and the second pass reports `normalization_type: linear`. Final: -13.9 LUFS integrated, true peak -1.7 dBTP in both files. Levels in the finished mix: call lines -14 to -17 LUFS, narration -12 to -14, hiss bed -43, music under narration about 10 dB below the voice, the theme's one-second entrance at 1:13 about 7 dB below it, serif line -45.
