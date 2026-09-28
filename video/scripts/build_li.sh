@@ -163,12 +163,13 @@ sine=f=4000:d=3.0,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=in:d
 [s1][s2][s3][s4][s5][s6][m1][m2][m3][n4][n5][n6][n7]amix=inputs=13:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL,alimiter=limit=0.354:attack=3:release=60:level=false[dial];
 [rain][horn][thud][room][hiss][tone][music][musicA]amix=inputs=8:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL,alimiter=limit=0.354:attack=3:release=60:level=false[bed];
 [dial]asplit[dialA][dialB];[bed]asplit[bedA][bedB];
-[dialA][bedA]amix=inputs=2:normalize=0:dropout_transition=0[mix]"
+[dialA][bedA]amix=inputs=2:normalize=0:dropout_transition=0,alimiter=limit=0.3:attack=2:release=40:level=false[mix]"
   "$FFMPEG" -v error -y "${ARGS[@]}" -filter_complex "$FC" -map "[mix]" -c:a pcm_s24le "$AUD/mix_li_raw.wav" -map "[dialB]" -c:a pcm_s24le "$AUD/stem_dialogue.wav" -map "[bedB]" -c:a pcm_s24le "$AUD/stem_bed.wav" || { echo "AUDIO MIX FAILED"; exit 1; }
-  J=$("$FFMPEG" -hide_banner -nostats -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json" -f null - 2>&1 | sed -n '/^{/,/^}/p')
+  J=$("$FFMPEG" -hide_banner -nostats -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.5:LRA=20:print_format=json" -f null - 2>&1 | sed -n '/^{/,/^}/p')
   g() { echo "$J" | grep "\"$1\"" | sed -E 's/.*: *"([^"]+)".*/\1/'; }
   echo "mix pass1: I=$(g input_i) TP=$(g input_tp) LRA=$(g input_lra) thresh=$(g input_thresh) offset=$(g target_offset)" | tee -a "$AUD/times.txt"
-  "$FFMPEG" -v error -y -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=$(g input_i):measured_TP=$(g input_tp):measured_LRA=$(g input_lra):measured_thresh=$(g input_thresh):offset=$(g target_offset):linear=true:print_format=summary" -ar 48000 -c:a pcm_s24le "$AUD/mix_li.wav" 2>&1 | grep -E 'Normalization Type|Output Integrated|Output True Peak' | tee -a "$AUD/times.txt"
+  "$FFMPEG" -v error -y -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.5:LRA=20:measured_I=$(g input_i):measured_TP=$(g input_tp):measured_LRA=$(g input_lra):measured_thresh=$(g input_thresh):offset=$(g target_offset):linear=true:print_format=summary" -ar 48000 -c:a pcm_s24le "$AUD/mix_li.wav"
+  "$FFMPEG" -hide_banner -nostats -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.5:LRA=20:measured_I=$(g input_i):measured_TP=$(g input_tp):measured_LRA=$(g input_lra):measured_thresh=$(g input_thresh):offset=$(g target_offset):linear=true:print_format=json" -f null - 2>&1 | grep -E '"normalization_type"|"output_i"|"output_tp"' | tr -d " \n" | tee -a "$AUD/times.txt"; echo
   # timeline for captions
   cat > "$AUD/li_timeline.json" <<EOF
 { "total": $TOTAL, "items": [
