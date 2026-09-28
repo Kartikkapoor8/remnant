@@ -136,7 +136,7 @@ if [ "$STEP" = audio ] || [ "$STEP" = all ]; then
   dk() { awk -v a="$1" -v b="$2" -v m="$M0" 'BEGIN{printf "-8*min(clip((t-(%.3f-0.25))/0.25,0,1),clip(((%.3f+0.6)-t)/0.6,0,1))", a-m, b-m}'; }
   # one duck across the whole narration block (gaps between lines are under 1.2 s; pumping there would be worse than staying down)
   ENV="pow(10,(-11+10*clip(1-(t-5.5)/1.5,0,1)-20*clip((t-31.5)/1.0,0,1)-40*clip((t-32.5)/3.0,0,1)+$(dk $T_N4 $E6))/20)"
-  echo "music: theme src 18.0-53.5 at cut 66.0-101.5; envelope: $ENV" >> "$AUD/times.txt"
+  echo "music: theme src 4.0-17.0 at cut 0-13.0 (+4 dB, 1.5 s in, hard out on the thud); theme src 18.0-53.5 at cut 66.0-101.5; envelope: $ENV" >> "$AUD/times.txt"
   # phone-line hiss: the ElevenLabs clip came back at -70 LUFS, so synthesize band-limited pink noise and set it to -46 LUFS (pre-normalization)
   "$FFMPEG" -v error -y -f lavfi -i "anoisesrc=color=pink:amplitude=0.03:seed=7:d=28.0:r=48000" -af "highpass=f=300:poles=2,lowpass=f=3400:poles=2" "$PROC/hiss_synth_raw.wav"
   HI=$("$FFMPEG" -hide_banner -i "$PROC/hiss_synth_raw.wav" -af ebur128 -f null - 2>&1 | grep -E '^\s+I:' | tail -1 | awk '{print $2}')
@@ -146,7 +146,7 @@ if [ "$STEP" = audio ] || [ "$STEP" = all ]; then
   fadeout() { awk -v d="$(dur "$1")" 'BEGIN{printf "%.3f", d-0.25}'; }
   I=( "$PROC/sarah1_phone.wav" "$PROC/sarah2_phone.wav" "$PROC/sarah3_phone.wav" "$PROC/sarah4_phone.wav" "$PROC/sarah5_phone.wav" "$PROC/sarah6_phone.wav" \
       "$OWN/me1.wav" "$OWN/me2.wav" "$OWN/me3.wav" "$N4" "$N5" "$N6" "$N7" \
-      "$RAW/sfx_rain.mp3" "$RAW/sfx_horn.mp3" "$RAW/sfx_thud.mp3" "$RAW/sfx_room.mp3" "$PROC/hiss_synth.wav" "$MUSIC" )
+      "$RAW/sfx_rain.mp3" "$RAW/sfx_horn.mp3" "$RAW/sfx_thud.mp3" "$RAW/sfx_room.mp3" "$PROC/hiss_synth.wav" "$MUSIC" "$MUSIC" )
   ARGS=(); for i in "${!I[@]}"; do case $i in 16) ARGS+=( -stream_loop 4 -i "${I[$i]}" );; *) ARGS+=( -i "${I[$i]}" );; esac; done
   pl() { echo "[$1:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=$3,adelay=$(ms "$2")|$(ms "$2")"; }
   FC="$(pl 0 $T_S1 -2dB)[s1];$(pl 1 $T_S2 -2dB)[s2];$(pl 2 $T_S3 -2dB)[s3];$(pl 3 $T_S4 -2dB)[s4];$(pl 4 $T_S5 -2dB)[s5];$(pl 5 $T_S6 -2dB)[s6];
@@ -158,9 +158,10 @@ $(pl 9 $T_N4 -3dB)[n4];$(pl 10 $T_N5 -3dB)[n5];$(pl 11 $T_N6 -3dB)[n6];$(pl 12 $
 [16:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:60.5,asetpts=PTS-STARTPTS,afade=t=in:d=0.4,afade=t=out:st=58.5:d=2.0,volume=10dB,adelay=17000|17000[room];
 [17:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:28.0,asetpts=PTS-STARTPTS,afade=t=in:d=0.15,afade=t=out:st=27.5:d=0.5,adelay=38000|38000[hiss];
 [18:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=18.0:53.5,asetpts=PTS-STARTPTS,afade=t=in:d=1.5,asetnsamples=n=256,volume='$ENV':eval=frame,adelay=66000|66000[music];
+[19:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=4.0:17.0,asetpts=PTS-STARTPTS,afade=t=in:d=1.5,afade=t=out:st=12.95:d=0.05,volume=4dB[musicA];
 sine=f=4000:d=3.0,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=in:d=2.8,volume=-26dB,adelay=14000|14000[tone];
 [s1][s2][s3][s4][s5][s6][m1][m2][m3][n4][n5][n6][n7]amix=inputs=13:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL,alimiter=limit=0.354:attack=3:release=60:level=false[dial];
-[rain][horn][thud][room][hiss][tone][music]amix=inputs=7:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL,alimiter=limit=0.354:attack=3:release=60:level=false[bed];
+[rain][horn][thud][room][hiss][tone][music][musicA]amix=inputs=8:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL,alimiter=limit=0.354:attack=3:release=60:level=false[bed];
 [dial]asplit[dialA][dialB];[bed]asplit[bedA][bedB];
 [dialA][bedA]amix=inputs=2:normalize=0:dropout_transition=0[mix]"
   "$FFMPEG" -v error -y "${ARGS[@]}" -filter_complex "$FC" -map "[mix]" -c:a pcm_s24le "$AUD/mix_li_raw.wav" -map "[dialB]" -c:a pcm_s24le "$AUD/stem_dialogue.wav" -map "[bedB]" -c:a pcm_s24le "$AUD/stem_bed.wav" || { echo "AUDIO MIX FAILED"; exit 1; }
