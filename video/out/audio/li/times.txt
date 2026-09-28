@@ -7,4 +7,5 @@ call: me1=39.0 s1=41.520 me2=43.763 s2=45.803 s3=48.092 me3=50.703 s4=51.353 s5=
 narration: n4=68.0-76.918 n5=77.800-90.714 n6=91.800-97.484 n7=102.0-108.575
 music: theme src 4.0-17.0 at cut 0-13.0 (+4 dB, 1.5 s in, hard out on the thud); theme src 18.0-53.5 at cut 66.0-101.5; envelope: pow(10,(-11+10*clip(1-(t-5.5)/1.5,0,1)-20*clip((t-31.5)/1.0,0,1)-40*clip((t-32.5)/3.0,0,1)+-8*min(clip((t-(2.000-0.25))/0.25,0,1),clip(((31.484+0.6)-t)/0.6,0,1)))/20)
 hiss: pink noise 300-3400 Hz, measured -49.6 LUFS, gain -0.40 dB -> -50 LUFS
-mix pass1: I=-22.05 TP=-7.36 LRA=13.90 thresh=-34.58 offset=-0.84
+mix pass1: I=-22.49 TP=-10.25 LRA=13.20 thresh=-34.98 offset=-1.18
+	"output_i":"-13.93",	"output_tp":"-1.97",	"normalization_type":"linear",
