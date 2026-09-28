@@ -52,13 +52,13 @@ card() { local A=$1 name=$2 file=$3 fr=$4
 render_segments() { local A=$1
   local C_LOOK C_TYPE C_TAP C_CALL1 C_CALL2 C_LOWER
   if [ "$A" = 169 ]; then
-    C_LOOK="2489:1400:369:720"; C_TYPE="2489:1400:1351:700"; C_TAP="2489:1400:1351:700"; C_CALL1="2489:1400:1351:700"; C_CALL2="2489:1400:1351:700"; C_LOWER="2489:1400:0:300"
+    C_LOOK="2489:1400:369:720"; C_TYPE="2489:1400:1351:700"; C_TAP="2489:1400:1351:700"; C_CALL1="2489:1400:1351:700"; C_CALL2="2489:1400:1351:700"; C_LOWER="2489:1400:0:300"; XTRA=null
   else  # 4:5 recrops: phone centred, hands in frame, face out
-    C_LOOK="1500:1875:1412:285"; C_TYPE="1728:2160:736:0"; C_TAP="1728:2160:656:0"; C_CALL1="1728:2160:816:0"; C_CALL2="1728:2160:776:0"; C_LOWER="1728:2160:0:0"
+    C_LOOK="1500:1875:1412:285"; C_TYPE="1728:2160:736:0"; C_TAP="1728:2160:656:0"; C_CALL1="1728:2160:816:0"; C_CALL2="1728:2160:776:0"; C_LOWER="1728:2160:0:0"; XTRA="curves=m='0/0 0.5/0.45 1/0.9'"
   fi
   rm -f "$LI/seg$A"/s[0-9][0-9]_*.mp4
   card   $A s00_coldopen "$LI/cards/coldopen_$A.mp4" 48 &
-  couch  $A s02_couch_look "$COUCH_A" 4.0 72 "$C_LOOK" &
+  couch  $A s02_couch_look "$COUCH_A" 4.0 72 "$C_LOOK" "$XTRA" &
   screen $A s03_screen_dead 2.5 96 &
   gen    $A s04_A0 "$A0" 1.5 24 566 &
   gen    $A s05_A1 "$A1" 1.5 24 528 &
@@ -67,15 +67,15 @@ render_segments() { local A=$1
   black  $A s08_black 24 &
   wait
   gen    $A s09_C "$CC" 0.5 72 528 &
-  couch  $A s10_couch_typing "$COUCH_B" 39.5 72 "$C_TYPE" &
+  couch  $A s10_couch_typing "$COUCH_B" 39.5 72 "$C_TYPE" "$XTRA" &
   screen $A s11_screen_bursts1 13.5 168 &
   screen $A s12_screen_bursts2 30.5 168 &
   screen $A s13_screen_hear 62.5 48 &
-  couch  $A s14_couch_calltap "$COUCH_B" 49.0 48 "$C_TAP" &
+  couch  $A s14_couch_calltap "$COUCH_B" 49.0 48 "$C_TAP" "$XTRA" &
   wait
-  couch  $A s15_couch_call1 "$COUCH_B" 52.5 72 "$C_CALL1" &
+  couch  $A s15_couch_call1 "$COUCH_B" 52.5 72 "$C_CALL1" "curves=m='0/0 0.5/0.42 1/0.86',$XTRA" &
   screen $A s16_screen_call1 85.0 240 &
-  couch  $A s17_couch_call2 "$COUCH_B" 56.0 72 "$C_CALL2" &
+  couch  $A s17_couch_call2 "$COUCH_B" 56.0 72 "$C_CALL2" "curves=m='0/0 0.5/0.42 1/0.86',$XTRA" &
   screen $A s18_screen_call2 98.0 288 &
   couch  $A s19_couch_lower "$COUCH_C" 6.0 96 "$C_LOWER" "curves=m='0/0 0.5/0.34 1/0.72',vignette=a=PI/3.6" &
   screen $A s20_screen_after 126.0 96 &
@@ -130,13 +130,10 @@ if [ "$STEP" = audio ] || [ "$STEP" = all ]; then
   E4=$(add $T_N4 $(dur $N4)); E5=$(add $T_N5 $(dur $N5)); E6=$(add $T_N6 $(dur $N6)); E7=$(add $T_N7 $(dur $N7))
   echo "call: me1=$T_ME1 s1=$T_S1 me2=$T_ME2 s2=$T_S2 s3=$T_S3 me3=$T_ME3 s4=$T_S4 s5=$T_S5 s6=$T_S6 end=$CALL_END" | tee -a "$AUD/times.txt"
   echo "narration: n4=$T_N4-$E4 n5=$T_N5-$E5 n6=$T_N6-$E6 n7=$T_N7-$E7" | tee -a "$AUD/times.txt"
-  # music envelope (t = seconds into the music segment, which starts at cut 66.0): base -14 dB, +10 dB lift under the
-  # lowering shot before the theme's entrance, -8 dB under each narration line, pulled to silence across the serif line
-  M0=66.0
-  dk() { awk -v a="$1" -v b="$2" -v m="$M0" 'BEGIN{printf "-8*min(clip((t-(%.3f-0.25))/0.25,0,1),clip(((%.3f+0.6)-t)/0.6,0,1))", a-m, b-m}'; }
-  # one duck across the whole narration block (gaps between lines are under 1.2 s; pumping there would be worse than staying down)
-  ENV="pow(10,(-11+10*clip(1-(t-5.5)/1.5,0,1)-20*clip((t-31.5)/1.0,0,1)-40*clip((t-32.5)/3.0,0,1)+$(dk $T_N4 $E6))/20)"
-  echo "music: theme src 4.0-17.0 at cut 0-13.0 (+4 dB, 1.5 s in, hard out on the thud); theme src 18.0-53.5 at cut 66.0-101.5; envelope: $ENV" >> "$AUD/times.txt"
+  # music: the whole theme (src 4.0 on) under the whole film, flattened to a constant short-term level, 4 dB under any voice
+  VOICES="$T_ME1:$(add $T_ME1 $(dur $OWN/me1.wav)),$T_S1:$(add $T_S1 $(dur $PROC/sarah1_phone.wav)),$T_ME2:$(add $T_ME2 $(dur $OWN/me2.wav)),$T_S2:$(add $T_S2 $(dur $PROC/sarah2_phone.wav)),$T_S3:$(add $T_S3 $(dur $PROC/sarah3_phone.wav)),$T_ME3:$(add $T_ME3 $(dur $OWN/me3.wav)),$T_S4:$(add $T_S4 $(dur $PROC/sarah4_phone.wav)),$T_S5:$(add $T_S5 $(dur $PROC/sarah5_phone.wav)),$T_S6:$CALL_END,$T_N4:$E4,$T_N5:$E5,$T_N6:$E6,$T_N7:$E7"
+  MUSIC_TARGET=${MUSIC_TARGET:--38.5}
+  node "$V/scripts/li_music_curve.cjs" "$FFMPEG" "$MUSIC" "$PROC/music_gain.wav" 4.0 $TOTAL $MUSIC_TARGET -4 "$VOICES" 1.0 2.0 | tee -a "$AUD/times.txt"
   # phone-line hiss: the ElevenLabs clip came back at -70 LUFS, so synthesize band-limited pink noise and set it to -46 LUFS (pre-normalization)
   "$FFMPEG" -v error -y -f lavfi -i "anoisesrc=color=pink:amplitude=0.03:seed=7:d=28.0:r=48000" -af "highpass=f=300:poles=2,lowpass=f=3400:poles=2" "$PROC/hiss_synth_raw.wav"
   HI=$("$FFMPEG" -hide_banner -i "$PROC/hiss_synth_raw.wav" -af ebur128 -f null - 2>&1 | grep -E '^\s+I:' | tail -1 | awk '{print $2}')
@@ -146,7 +143,7 @@ if [ "$STEP" = audio ] || [ "$STEP" = all ]; then
   fadeout() { awk -v d="$(dur "$1")" 'BEGIN{printf "%.3f", d-0.25}'; }
   I=( "$PROC/sarah1_phone.wav" "$PROC/sarah2_phone.wav" "$PROC/sarah3_phone.wav" "$PROC/sarah4_phone.wav" "$PROC/sarah5_phone.wav" "$PROC/sarah6_phone.wav" \
       "$OWN/me1.wav" "$OWN/me2.wav" "$OWN/me3.wav" "$N4" "$N5" "$N6" "$N7" \
-      "$RAW/sfx_rain.mp3" "$RAW/sfx_horn.mp3" "$RAW/sfx_thud.mp3" "$RAW/sfx_room.mp3" "$PROC/hiss_synth.wav" "$MUSIC" "$MUSIC" )
+      "$RAW/sfx_rain.mp3" "$RAW/sfx_horn.mp3" "$RAW/sfx_thud.mp3" "$RAW/sfx_room.mp3" "$PROC/hiss_synth.wav" "$MUSIC" "$PROC/music_gain.wav" )
   ARGS=(); for i in "${!I[@]}"; do case $i in 16) ARGS+=( -stream_loop 4 -i "${I[$i]}" );; *) ARGS+=( -i "${I[$i]}" );; esac; done
   pl() { echo "[$1:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=$3,adelay=$(ms "$2")|$(ms "$2")"; }
   FC="$(pl 0 $T_S1 -2dB)[s1];$(pl 1 $T_S2 -2dB)[s2];$(pl 2 $T_S3 -2dB)[s3];$(pl 3 $T_S4 -2dB)[s4];$(pl 4 $T_S5 -2dB)[s5];$(pl 5 $T_S6 -2dB)[s6];
@@ -157,14 +154,15 @@ $(pl 9 $T_N4 -3dB)[n4];$(pl 10 $T_N5 -3dB)[n5];$(pl 11 $T_N6 -3dB)[n6];$(pl 12 $
 [15:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:1.0,asetpts=PTS-STARTPTS,afade=t=out:st=0.6:d=0.4,volume=-3dB,adelay=13000|13000[thud];
 [16:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:60.5,asetpts=PTS-STARTPTS,afade=t=in:d=0.4,afade=t=out:st=58.5:d=2.0,volume=10dB,adelay=17000|17000[room];
 [17:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:28.0,asetpts=PTS-STARTPTS,afade=t=in:d=0.15,afade=t=out:st=27.5:d=0.5,adelay=38000|38000[hiss];
-[18:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=18.0:53.5,asetpts=PTS-STARTPTS,afade=t=in:d=1.5,asetnsamples=n=256,volume='$ENV':eval=frame,adelay=66000|66000[music];
-[19:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=4.0:17.0,asetpts=PTS-STARTPTS,afade=t=in:d=1.5,afade=t=out:st=12.95:d=0.05,volume=4dB[musicA];
+[18:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=4.0:$(awk -v t=$TOTAL "BEGIN{printf \"%.3f\", 4.0+t}"),asetpts=PTS-STARTPTS[mraw];
+[19:a]aformat=sample_rates=48000:channel_layouts=stereo[mgain];
+[mraw][mgain]amultiply,asplit[music][musicS];
 sine=f=4000:d=3.0,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=in:d=2.8,volume=-26dB,adelay=14000|14000[tone];
 [s1][s2][s3][s4][s5][s6][m1][m2][m3][n4][n5][n6][n7]amix=inputs=13:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL,alimiter=limit=0.354:attack=3:release=60:level=false[dial];
-[rain][horn][thud][room][hiss][tone][music][musicA]amix=inputs=8:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL,alimiter=limit=0.354:attack=3:release=60:level=false[bed];
+[rain][horn][thud][room][hiss][tone][music]amix=inputs=7:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL,alimiter=limit=0.354:attack=3:release=60:level=false[bed];
 [dial]asplit[dialA][dialB];[bed]asplit[bedA][bedB];
 [dialA][bedA]amix=inputs=2:normalize=0:dropout_transition=0,alimiter=limit=0.3:attack=2:release=40:level=false[mix]"
-  "$FFMPEG" -v error -y "${ARGS[@]}" -filter_complex "$FC" -map "[mix]" -c:a pcm_s24le "$AUD/mix_li_raw.wav" -map "[dialB]" -c:a pcm_s24le "$AUD/stem_dialogue.wav" -map "[bedB]" -c:a pcm_s24le "$AUD/stem_bed.wav" || { echo "AUDIO MIX FAILED"; exit 1; }
+  "$FFMPEG" -v error -y "${ARGS[@]}" -filter_complex "$FC" -map "[mix]" -c:a pcm_s24le "$AUD/mix_li_raw.wav" -map "[dialB]" -c:a pcm_s24le "$AUD/stem_dialogue.wav" -map "[bedB]" -c:a pcm_s24le "$AUD/stem_bed.wav" -map "[musicS]" -c:a pcm_s24le "$AUD/stem_music.wav" || { echo "AUDIO MIX FAILED"; exit 1; }
   J=$("$FFMPEG" -hide_banner -nostats -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.5:LRA=20:print_format=json" -f null - 2>&1 | sed -n '/^{/,/^}/p')
   g() { echo "$J" | grep "\"$1\"" | sed -E 's/.*: *"([^"]+)".*/\1/'; }
   echo "mix pass1: I=$(g input_i) TP=$(g input_tp) LRA=$(g input_lra) thresh=$(g input_thresh) offset=$(g target_offset)" | tee -a "$AUD/times.txt"
