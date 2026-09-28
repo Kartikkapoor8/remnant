@@ -1,0 +1,10 @@
+nar4: raw 9.325714 tight 8.920000 atempo 1.000 -> 8.917771 (slot 9.3)
+nar5: raw 13.714286 tight 12.918833 atempo 1.000 -> 12.914375 (slot 13.5)
+nar6: raw 6.347755 tight 5.900625 atempo 1.040 -> 5.683646 (slot 5.7)
+nar7: raw 7.471020 tight 6.643396 atempo 1.012 -> 6.575313 (slot 6.6)
+narration total 34.09s
+call: me1=39.0 s1=41.520 me2=43.763 s2=45.803 s3=48.092 me3=50.703 s4=51.353 s5=54.150 s6=60.598 end=63.338
+narration: n4=68.0-76.918 n5=77.800-90.714 n6=91.800-97.484 n7=102.0-108.575
+music: theme src 18.0-53.5 at cut 66.0-101.5; envelope: pow(10,(-11+10*clip(1-(t-5.5)/1.5,0,1)-20*clip((t-31.5)/1.0,0,1)-40*clip((t-32.5)/3.0,0,1)+-8*min(clip((t-(2.000-0.25))/0.25,0,1),clip(((31.484+0.6)-t)/0.6,0,1)))/20)
+hiss: pink noise 300-3400 Hz, measured -49.6 LUFS, gain -0.40 dB -> -50 LUFS
+mix pass1: I=-21.51 TP=-7.36 LRA=12.70 thresh=-34.31 offset=0.04

@@ -1,0 +1,36 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1350
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Cap,Inter,42,&H00DFE8ED,&H00DFE8ED,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,1.4,0,2,80,80,150,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:38.94,0:00:39.94,Cap,,0,0,0,,hello?
+Dialogue: 0,0:00:41.54,0:00:42.54,Cap,,0,0,0,,hi.
+Dialogue: 0,0:00:43.72,0:00:44.72,Cap,,0,0,0,,i miss you.
+Dialogue: 0,0:00:45.80,0:00:46.80,Cap,,0,0,0,,i know.
+Dialogue: 0,0:00:48.09,0:00:49.22,Cap,,0,0,0,,you had the hackathon today.
+Dialogue: 0,0:00:49.25,0:00:50.63,Cap,,0,0,0,,how'd it actually go.
+Dialogue: 0,0:00:50.74,0:00:51.32,Cap,,0,0,0,,it was okay.
+Dialogue: 0,0:00:51.35,0:00:53.43,Cap,,0,0,0,,you said okay every time it went well.
+Dialogue: 0,0:00:54.17,0:00:54.94,Cap,,0,0,0,,it's sunday.
+Dialogue: 0,0:00:54.97,0:00:59.51,Cap,,0,0,0,,tuesday i'd have been at the salon. eleven, same as always.
+Dialogue: 0,0:01:00.60,0:01:01.94,Cap,,0,0,0,,go get some sleep.
+Dialogue: 0,0:01:02.50,0:01:03.50,Cap,,0,0,0,,love you.
+Dialogue: 0,0:01:08.02,0:01:11.67,Cap,,0,0,0,,i built this in one afternoon, at a yc hackathon.
+Dialogue: 0,0:01:11.70,0:01:14.11,Cap,,0,0,0,,a message export, a voice sample,
+Dialogue: 0,0:01:14.14,0:01:17.24,Cap,,0,0,0,,and remnant builds a reflection of someone you lost.
+Dialogue: 0,0:01:17.72,0:01:19.45,Cap,,0,0,0,,her memory is in gbrain.
+Dialogue: 0,0:01:19.48,0:01:23.18,Cap,,0,0,0,,the model is a lora on her messages, through river.
+Dialogue: 0,0:01:23.21,0:01:26.63,Cap,,0,0,0,,her voice is elevenlabs, behind a consent gate.
+Dialogue: 0,0:01:26.66,0:01:31.14,Cap,,0,0,0,,the memory and the weights are mine, not a company's.
+Dialogue: 0,0:01:31.74,0:01:34.97,Cap,,0,0,0,,never claims to be alive, never texts first,
+Dialogue: 0,0:01:35.00,0:01:37.66,Cap,,0,0,0,,and in a crisis it steps aside.
+Dialogue: 0,0:01:41.90,0:01:44.78,Cap,,0,0,0,,they said, own your intelligence.
+Dialogue: 0,0:01:45.16,0:01:48.96,Cap,,0,0,0,,nothing is more yours than the people you loved.

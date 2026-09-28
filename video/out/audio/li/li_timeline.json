@@ -1,0 +1,15 @@
+{ "total": 110.5, "items": [
+ { "id": "me1", "who": "me", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/own/me1.wav", "start": 39.0, "dur": 0.320000, "caption": "hello?" },
+ { "id": "sarah1", "who": "sarah", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/proc/sarah1_phone.wav", "start": 41.520, "dur": 0.743042, "caption": "hi." },
+ { "id": "me2", "who": "me", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/own/me2.wav", "start": 43.763, "dur": 0.540000, "caption": "i miss you." },
+ { "id": "sarah2", "who": "sarah", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/proc/sarah2_phone.wav", "start": 45.803, "dur": 0.789479, "caption": "i know." },
+ { "id": "sarah3", "who": "sarah", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/proc/sarah3_phone.wav", "start": 48.092, "dur": 2.461333, "caption": "you had the hackathon today. | how'd it actually go." },
+ { "id": "me3", "who": "me", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/own/me3.wav", "start": 50.703, "dur": 0.500000, "caption": "it was okay." },
+ { "id": "sarah4", "who": "sarah", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/proc/sarah4_phone.wav", "start": 51.353, "dur": 1.996917, "caption": "you said okay every time it went well." },
+ { "id": "sarah5", "who": "sarah", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/proc/sarah5_phone.wav", "start": 54.150, "dur": 5.247729, "caption": "it's sunday. | tuesday i'd have been at the salon. eleven, same as always." },
+ { "id": "sarah6", "who": "sarah", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/proc/sarah6_phone.wav", "start": 60.598, "dur": 2.739958, "caption": "go get some sleep. | love you." },
+ { "id": "nar4", "who": "narr", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/proc/nar4_fit.wav", "start": 68.0, "dur": 8.917771, "caption": "i built this in one afternoon, at a yc hackathon. | a message export, a voice sample, | and remnant builds a reflection of someone you lost." },
+ { "id": "nar5", "who": "narr", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/proc/nar5_fit.wav", "start": 77.800, "dur": 12.914375, "caption": "her memory is in gbrain. | the model is a lora on her messages, through river. | her voice is elevenlabs, behind a consent gate. | the memory and the weights are mine, not a company's." },
+ { "id": "nar6", "who": "narr", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/proc/nar6_fit.wav", "start": 91.800, "dur": 5.683646, "caption": "never claims to be alive, never texts first, | and in a crisis it steps aside." },
+ { "id": "nar7", "who": "narr", "file": "/Users/kartik/hack/remnant-explainer/video/out/audio/li/proc/nar7_fit.wav", "start": 102.0, "dur": 6.575313, "caption": "they said, own your intelligence. | nothing is more yours than the people you loved." }
+] }
