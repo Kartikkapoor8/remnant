@@ -132,7 +132,7 @@ if [ "$STEP" = audio ] || [ "$STEP" = all ]; then
   echo "narration: n4=$T_N4-$E4 n5=$T_N5-$E5 n6=$T_N6-$E6 n7=$T_N7-$E7" | tee -a "$AUD/times.txt"
   # music: the whole theme (src 4.0 on) under the whole film, flattened to a constant short-term level, 4 dB under any voice
   VOICES="$T_ME1:$(add $T_ME1 $(dur $OWN/me1.wav)),$T_S1:$(add $T_S1 $(dur $PROC/sarah1_phone.wav)),$T_ME2:$(add $T_ME2 $(dur $OWN/me2.wav)),$T_S2:$(add $T_S2 $(dur $PROC/sarah2_phone.wav)),$T_S3:$(add $T_S3 $(dur $PROC/sarah3_phone.wav)),$T_ME3:$(add $T_ME3 $(dur $OWN/me3.wav)),$T_S4:$(add $T_S4 $(dur $PROC/sarah4_phone.wav)),$T_S5:$(add $T_S5 $(dur $PROC/sarah5_phone.wav)),$T_S6:$CALL_END,$T_N4:$E4,$T_N5:$E5,$T_N6:$E6,$T_N7:$E7"
-  MUSIC_TARGET=${MUSIC_TARGET:--38.5}
+  MUSIC_TARGET=${MUSIC_TARGET:--34.5}
   node "$V/scripts/li_music_curve.cjs" "$FFMPEG" "$MUSIC" "$PROC/music_gain.wav" 4.0 $TOTAL $MUSIC_TARGET -4 "$VOICES" 1.0 2.0 | tee -a "$AUD/times.txt"
   # phone-line hiss: the ElevenLabs clip came back at -70 LUFS, so synthesize band-limited pink noise and set it to -46 LUFS (pre-normalization)
   "$FFMPEG" -v error -y -f lavfi -i "anoisesrc=color=pink:amplitude=0.03:seed=7:d=28.0:r=48000" -af "highpass=f=300:poles=2,lowpass=f=3400:poles=2" "$PROC/hiss_synth_raw.wav"
@@ -148,26 +148,32 @@ if [ "$STEP" = audio ] || [ "$STEP" = all ]; then
   pl() { echo "[$1:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=$3,adelay=$(ms "$2")|$(ms "$2")"; }
   FC="$(pl 0 $T_S1 -2dB)[s1];$(pl 1 $T_S2 -2dB)[s2];$(pl 2 $T_S3 -2dB)[s3];$(pl 3 $T_S4 -2dB)[s4];$(pl 4 $T_S5 -2dB)[s5];$(pl 5 $T_S6 -2dB)[s6];
 $(pl 6 $T_ME1 1dB)[m1];$(pl 7 $T_ME2 1dB)[m2];$(pl 8 $T_ME3 -1dB)[m3];
-$(pl 9 $T_N4 -3dB)[n4];$(pl 10 $T_N5 -3dB)[n5];$(pl 11 $T_N6 -3dB)[n6];$(pl 12 $T_N7 -1dB)[n7];
-[13:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=3.0:7.0,asetpts=PTS-STARTPTS,volume=-5dB,adelay=9000|9000[rain];
-[14:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=2.0:2.8,asetpts=PTS-STARTPTS,afade=t=in:d=0.6,equalizer=f=3000:t=q:w=1.2:g=-3,volume=-9dB,adelay=12200|12200[horn];
-[15:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:1.0,asetpts=PTS-STARTPTS,afade=t=out:st=0.6:d=0.4,volume=-3dB,adelay=13000|13000[thud];
+$(pl 9 $T_N4 -5dB)[n4];$(pl 10 $T_N5 -5dB)[n5];$(pl 11 $T_N6 -5dB)[n6];$(pl 12 $T_N7 -3dB)[n7];
+[13:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=3.0:7.0,asetpts=PTS-STARTPTS,volume=-6dB,adelay=9000|9000[rain];
+[14:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=1.2:2.8,asetpts=PTS-STARTPTS,afade=t=in:d=1.3:curve=squ,equalizer=f=3000:t=q:w=1.2:g=-3,volume=-4dB,adelay=11400|11400[horn];
+[15:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:1.0,asetpts=PTS-STARTPTS,afade=t=out:st=0.6:d=0.4,volume=0dB,adelay=13000|13000[thud];
+anoisesrc=color=brown:amplitude=0.5:seed=3:d=4.0:r=48000,aformat=sample_rates=48000:channel_layouts=stereo,lowpass=f=140:poles=2,afade=t=in:d=2.5:curve=exp,volume=-12dB,adelay=9000|9000[rumble];
+anoisesrc=color=white:amplitude=0.3:seed=5:d=2.2:r=48000,aformat=sample_rates=48000:channel_layouts=stereo,bandpass=f=1800:width_type=q:w=0.7,afade=t=in:d=2.1:curve=exp,afade=t=out:st=2.15:d=0.05,volume=-14dB,adelay=10800|10800[riser];
+sine=f=42:d=2.0:r=48000,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=in:d=1.9:curve=exp,afade=t=out:st=1.95:d=0.05,volume=6dB,adelay=11000|11000[subswell];
+sine=f=55:d=1.0:r=48000,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=out:st=0.05:d=0.95:curve=exp,volume=8dB,adelay=13000|13000[subhit];
+anoisesrc=color=white:amplitude=0.6:seed=9:d=0.08:r=48000,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=out:st=0.01:d=0.07,volume=-8dB,adelay=13000|13000[crack];
+sine=f=40:d=0.7:r=48000,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=out:st=0.05:d=0.65:curve=exp,volume=4dB,adelay=9000|9000[boom];
 [16:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:60.5,asetpts=PTS-STARTPTS,afade=t=in:d=0.4,afade=t=out:st=58.5:d=2.0,volume=10dB,adelay=17000|17000[room];
 [17:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:28.0,asetpts=PTS-STARTPTS,afade=t=in:d=0.15,afade=t=out:st=27.5:d=0.5,adelay=38000|38000[hiss];
 [18:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=4.0:$(awk -v t=$TOTAL "BEGIN{printf \"%.3f\", 4.0+t}"),asetpts=PTS-STARTPTS[mraw];
 [19:a]aformat=sample_rates=48000:channel_layouts=stereo[mgain];
-[mraw][mgain]amultiply,asplit[music][musicS];
+[mraw][mgain]amultiply,asetnsamples=n=256,volume='1-0.6*max(0,min(1,(t-13.0)/0.05))*max(0,min(1,(14.3-t)/0.5))':eval=frame,asplit[music][musicS];
 sine=f=4000:d=3.0,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=in:d=2.8,volume=-26dB,adelay=14000|14000[tone];
 [s1][s2][s3][s4][s5][s6][m1][m2][m3][n4][n5][n6][n7]amix=inputs=13:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL,alimiter=limit=0.354:attack=3:release=60:level=false[dial];
-[rain][horn][thud][room][hiss][tone][music]amix=inputs=7:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL,alimiter=limit=0.354:attack=3:release=60:level=false[bed];
+[rain][horn][thud][room][hiss][tone][music][rumble][riser][subswell][subhit][crack][boom]amix=inputs=13:normalize=0:dropout_transition=0,atrim=0:$TOTAL,apad=whole_dur=$TOTAL,alimiter=limit=0.354:attack=3:release=60:level=false[bed];
 [dial]asplit[dialA][dialB];[bed]asplit[bedA][bedB];
-[dialA][bedA]amix=inputs=2:normalize=0:dropout_transition=0,alimiter=limit=0.3:attack=2:release=40:level=false[mix]"
+[dialA][bedA]amix=inputs=2:normalize=0:dropout_transition=0,alimiter=limit=0.2:attack=2:release=40:level=false[mix]"
   "$FFMPEG" -v error -y "${ARGS[@]}" -filter_complex "$FC" -map "[mix]" -c:a pcm_s24le "$AUD/mix_li_raw.wav" -map "[dialB]" -c:a pcm_s24le "$AUD/stem_dialogue.wav" -map "[bedB]" -c:a pcm_s24le "$AUD/stem_bed.wav" -map "[musicS]" -c:a pcm_s24le "$AUD/stem_music.wav" || { echo "AUDIO MIX FAILED"; exit 1; }
-  J=$("$FFMPEG" -hide_banner -nostats -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.5:LRA=20:print_format=json" -f null - 2>&1 | sed -n '/^{/,/^}/p')
+  J=$("$FFMPEG" -hide_banner -nostats -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.0:LRA=20:print_format=json" -f null - 2>&1 | sed -n '/^{/,/^}/p')
   g() { echo "$J" | grep "\"$1\"" | sed -E 's/.*: *"([^"]+)".*/\1/'; }
   echo "mix pass1: I=$(g input_i) TP=$(g input_tp) LRA=$(g input_lra) thresh=$(g input_thresh) offset=$(g target_offset)" | tee -a "$AUD/times.txt"
-  "$FFMPEG" -v error -y -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.5:LRA=20:measured_I=$(g input_i):measured_TP=$(g input_tp):measured_LRA=$(g input_lra):measured_thresh=$(g input_thresh):offset=$(g target_offset):linear=true:print_format=summary" -ar 48000 -c:a pcm_s24le "$AUD/mix_li.wav"
-  "$FFMPEG" -hide_banner -nostats -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.5:LRA=20:measured_I=$(g input_i):measured_TP=$(g input_tp):measured_LRA=$(g input_lra):measured_thresh=$(g input_thresh):offset=$(g target_offset):linear=true:print_format=json" -f null - 2>&1 | grep -E '"normalization_type"|"output_i"|"output_tp"' | tr -d " \n" | tee -a "$AUD/times.txt"; echo
+  "$FFMPEG" -v error -y -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.0:LRA=20:measured_I=$(g input_i):measured_TP=$(g input_tp):measured_LRA=$(g input_lra):measured_thresh=$(g input_thresh):offset=$(g target_offset):linear=true:print_format=summary" -ar 48000 -c:a pcm_s24le "$AUD/mix_li.wav"
+  "$FFMPEG" -hide_banner -nostats -i "$AUD/mix_li_raw.wav" -af "loudnorm=I=-14:TP=-1.0:LRA=20:measured_I=$(g input_i):measured_TP=$(g input_tp):measured_LRA=$(g input_lra):measured_thresh=$(g input_thresh):offset=$(g target_offset):linear=true:print_format=json" -f null - 2>&1 | grep -E '"normalization_type"|"output_i"|"output_tp"' | tr -d " \n" | tee -a "$AUD/times.txt"; echo
   # timeline for captions
   cat > "$AUD/li_timeline.json" <<EOF
 { "total": $TOTAL, "items": [
