@@ -1,3 +1,11 @@
 *.mp4
-seg/
 audio/*.wav
+audio/**/*.wav
+li/cards/
+li/qa_sheet_*.jpg
+li/seg169/
+li/seg45/
+seg/
+audio/stt/
+audio/li/stt/
+audio/li/proc/

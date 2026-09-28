@@ -1,0 +1,12 @@
+[
+  { "id": "sarah1", "who": "sarah", "tts": "hi.", "caption": "hi." },
+  { "id": "sarah2", "who": "sarah", "tts": "I know.", "caption": "i know." },
+  { "id": "sarah3", "who": "sarah", "tts": "You had the hackathon today. How'd it actually go.", "caption": "you had the hackathon today. how'd it actually go." },
+  { "id": "sarah4", "who": "sarah", "tts": "You said ok every time it went well.", "caption": "you said ok every time it went well." },
+  { "id": "sarah5", "who": "sarah", "tts": "It's Sunday. Tuesday I'd have been at the salon. Eleven, same as always.", "caption": "it's sunday. tuesday i'd have been at the salon. eleven, same as always." },
+  { "id": "sarah6", "who": "sarah", "tts": "Go get some sleep. <break time=\"1.0s\" /> Love you.", "caption": "go get some sleep. | love you." },
+  { "id": "nar4", "who": "narr", "tts": "[warm] I built this in one afternoon, at a YC hackathon. A message export, a voice sample, and Remnant builds a reflection of someone you lost.", "caption": "i built this in one afternoon, at a yc hackathon. | a message export, a voice sample, | and remnant builds a reflection of someone you lost." },
+  { "id": "nar5", "who": "narr", "tts": "[steady] Her memory is in GBrain. The model is a LoRA on her messages, through River. Her voice is ElevenLabs, behind a consent gate. The memory and the weights are mine, not a company's.", "caption": "her memory is in gbrain. | the model is a lora on her messages, through river. | her voice is elevenlabs, behind a consent gate. | the memory and the weights are mine, not a company's." },
+  { "id": "nar6", "who": "narr", "tts": "[steady] Never claims to be alive, never texts first, and in a crisis it steps aside.", "caption": "never claims to be alive, never texts first, | and in a crisis it steps aside." },
+  { "id": "nar7", "who": "narr", "tts": "[quiet] They said, own your intelligence. Nothing is more yours than the people you loved.", "caption": "they said, own your intelligence. | nothing is more yours than the people you loved." }
+]

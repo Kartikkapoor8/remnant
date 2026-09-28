@@ -1,0 +1,163 @@
+[
+ {
+  "id": "me1",
+  "who": "me",
+  "start": 38.94,
+  "end": 39.94,
+  "text": "hello?"
+ },
+ {
+  "id": "sarah1",
+  "who": "sarah",
+  "start": 41.54,
+  "end": 42.54,
+  "text": "hi."
+ },
+ {
+  "id": "me2",
+  "who": "me",
+  "start": 43.723,
+  "end": 44.723,
+  "text": "i miss you."
+ },
+ {
+  "id": "sarah2",
+  "who": "sarah",
+  "start": 45.803,
+  "end": 46.803,
+  "text": "i know."
+ },
+ {
+  "id": "sarah3",
+  "who": "sarah",
+  "start": 48.092,
+  "end": 49.221999999999994,
+  "text": "you had the hackathon today."
+ },
+ {
+  "id": "sarah3",
+  "who": "sarah",
+  "start": 49.251999999999995,
+  "end": 50.632,
+  "text": "how'd it actually go."
+ },
+ {
+  "id": "me3",
+  "who": "me",
+  "start": 50.743,
+  "end": 51.323,
+  "text": "it was okay."
+ },
+ {
+  "id": "sarah4",
+  "who": "sarah",
+  "start": 51.353,
+  "end": 53.433,
+  "text": "you said okay every time it went well."
+ },
+ {
+  "id": "sarah5",
+  "who": "sarah",
+  "start": 54.169999999999995,
+  "end": 54.94112676056338,
+  "text": "it's sunday."
+ },
+ {
+  "id": "sarah5",
+  "who": "sarah",
+  "start": 54.97112676056338,
+  "end": 59.51,
+  "text": "tuesday i'd have been at the salon. eleven, same as always."
+ },
+ {
+  "id": "sarah6",
+  "who": "sarah",
+  "start": 60.598,
+  "end": 61.938,
+  "text": "go get some sleep."
+ },
+ {
+  "id": "sarah6",
+  "who": "sarah",
+  "start": 62.498,
+  "end": 63.498,
+  "text": "love you."
+ },
+ {
+  "id": "nar4",
+  "who": "narr",
+  "start": 68.02000000000001,
+  "end": 71.67,
+  "text": "i built this in one afternoon, at a yc hackathon."
+ },
+ {
+  "id": "nar4",
+  "who": "narr",
+  "start": 71.7,
+  "end": 74.11,
+  "text": "a message export, a voice sample,"
+ },
+ {
+  "id": "nar4",
+  "who": "narr",
+  "start": 74.14,
+  "end": 77.24,
+  "text": "and remnant builds a reflection of someone you lost."
+ },
+ {
+  "id": "nar5",
+  "who": "narr",
+  "start": 77.72,
+  "end": 79.44817142857143,
+  "text": "her memory is in gbrain."
+ },
+ {
+  "id": "nar5",
+  "who": "narr",
+  "start": 79.47817142857143,
+  "end": 83.18428571428572,
+  "text": "the model is a lora on her messages, through river."
+ },
+ {
+  "id": "nar5",
+  "who": "narr",
+  "start": 83.21428571428572,
+  "end": 86.62737142857142,
+  "text": "her voice is elevenlabs, behind a consent gate."
+ },
+ {
+  "id": "nar5",
+  "who": "narr",
+  "start": 86.65737142857142,
+  "end": 91.14,
+  "text": "the memory and the weights are mine, not a company's."
+ },
+ {
+  "id": "nar6",
+  "who": "narr",
+  "start": 91.74000000000001,
+  "end": 94.97,
+  "text": "never claims to be alive, never texts first,"
+ },
+ {
+  "id": "nar6",
+  "who": "narr",
+  "start": 95,
+  "end": 97.66,
+  "text": "and in a crisis it steps aside."
+ },
+ {
+  "id": "nar7",
+  "who": "narr",
+  "start": 101.9,
+  "end": 104.78,
+  "text": "they said, own your intelligence."
+ },
+ {
+  "id": "nar7",
+  "who": "narr",
+  "start": 105.16000000000001,
+  "end": 108.96,
+  "text": "nothing is more yours than the people you loved."
+ }
+]
