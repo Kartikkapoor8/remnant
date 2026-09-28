@@ -5,7 +5,7 @@ nar7: raw 7.471020 tight 6.643396 atempo 1.012 -> 6.575313 (slot 6.6)
 narration total 34.09s
 call: me1=39.0 s1=41.520 me2=43.763 s2=45.803 s3=48.092 me3=50.703 s4=51.353 s5=54.150 s6=60.598 end=63.338
 narration: n4=68.0-76.918 n5=77.800-90.714 n6=91.800-97.484 n7=102.0-108.575
-music curve: src 4-114.5 s flattened to -38.5 LUFS short-term, duck -4 dB under 13 voice spans; gain dB every 5 s: 0:-7.3 5:-2.1 10:-3.0 15:-9.7 20:-19.0 25:-20.5 30:-26.3 35:-25.0 40:-25.0 45:-26.2 50:-27.6 55:-30.7 60:-27.9 65:-24.2 70:-23.2 75:-23.8 80:-22.9 85:-22.9 90:-21.1 95:-20.3 100:-16.1 105:-17.8 110:-120.0
+music curve: src 4-114.5 s flattened to -34.5 LUFS short-term, duck -4 dB under 13 voice spans; gain dB every 5 s: 0:-3.3 5:1.9 10:1.0 15:-5.7 20:-15.0 25:-16.5 30:-22.3 35:-21.0 40:-21.0 45:-22.2 50:-23.6 55:-26.7 60:-23.9 65:-20.2 70:-19.2 75:-19.8 80:-18.9 85:-18.9 90:-17.1 95:-16.3 100:-12.1 105:-13.8 110:-120.0
 hiss: pink noise 300-3400 Hz, measured -49.6 LUFS, gain -0.40 dB -> -50 LUFS
-mix pass1: I=-22.04 TP=-10.30 LRA=18.30 thresh=-35.28 offset=-0.18
-	"output_i":"-13.90",	"output_tp":"-2.42",	"normalization_type":"linear",
+mix pass1: I=-26.18 TP=-13.43 LRA=11.80 thresh=-37.09 offset=-0.93
+	"output_i":"-13.93",	"output_tp":"-1.80",	"normalization_type":"linear",
